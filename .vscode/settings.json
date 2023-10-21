@@ -1,0 +1,7 @@
+{
+    "workbench.editor.autoLockGroups": {
+        "default": true
+    },
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.enablePreviewFromCodeNavigation": true
+}
