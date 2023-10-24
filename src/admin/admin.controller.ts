@@ -10,9 +10,10 @@ import {
   UseInterceptors,
   UploadedFiles,
   UploadedFile,
+  Req,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/file-uploads.utils';
@@ -89,8 +90,12 @@ export class AdminController {
   }
 
   @Post('add-vehicle')
-  add(@Body() createVehicle: CreateVehicleDto, @Res() res: Response) {
-    this.adminService.addVehicle(createVehicle, res);
+  add(
+    @Body() createVehicle: CreateVehicleDto,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    this.adminService.addVehicle(createVehicle, res, req);
   }
 
   @Post('upload-vehicle-images/:id')

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Host } from './schemas/host.schemas';
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, Res } from '@nestjs/common';
+import { Injectable, Req, Res } from '@nestjs/common';
 import { CreateHostDto } from './dto/create-host.dto';
 import { UpdateHostDto } from './dto/update-host.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -12,6 +12,8 @@ import * as otpgenerater from 'otp-generator';
 import { LoginHostDto } from './dto/login-host.dto';
 import { JwtService } from '@nestjs/jwt';
 import { stringify } from 'circular-json';
+import { CreateVehicleDto } from './dto/create-vehicle.dto';
+import { Vehicles } from 'src/admin/schemas/vehicles.schema';
 
 @Injectable()
 export class HostService {
@@ -20,6 +22,8 @@ export class HostService {
   constructor(
     @InjectModel('Host')
     private hostModel: Model<Host>,
+    @InjectModel('Vehicles')
+    private vehicleModel: Model<Vehicles>,
     private mailServive: MailerService,
     private jwtservice: JwtService,
   ) {}
@@ -33,12 +37,12 @@ export class HostService {
       const existNumber = await this.hostModel.findOne({ phone: phone });
       console.log(existNumber);
       if (existmail) {
-        return res.status(400).json({ message: 'Email exists' });
+        return res.status(400).json({ message: 'Email is already registered' });
       }
       if (existNumber) {
         return res
           .status(400)
-          .json({ message: 'Phone number already registered' });
+          .json({ message: 'Phone numberm is already registered' });
       }
 
       if (name && email && password && phone && confirmPass) {
@@ -185,15 +189,124 @@ export class HostService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} host`;
+  async uplaodProfile(file: any, @Res() res: Response, @Req() req: Request) {
+    try {
+      const response = {
+        originalname: file.originalname,
+        filename: file.filename,
+      };
+      const cookie = req.cookies['jwtHost'];
+      const claims = this.jwtservice.verify(cookie);
+      const userup = await this.hostModel.updateOne(
+        { _id: claims.id },
+        { $set: { profile: response.filename } },
+      );
+      return res.status(200).json({ userup, message: 'Success' });
+    } catch (err) {
+      return res
+        .status(400)
+        .json({ message: 'Only jpeg, png, jpg, gif format files are allowed' });
+    }
   }
 
-  update(id: number, updateHostDto: UpdateHostDto) {
-    return `This action updates a #${id} host`;
+  async hostdetails(@Req() req: Request, @Res() res: Response) {
+    try {
+      const cookie = req.cookies['jwtHost'];
+      const claims = this.jwtservice.verify(cookie);
+      const host = await this.hostModel.findById({ _id: claims.id });
+      res.send(host);
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} host`;
+  async updatehost(
+    updatehostdto: UpdateHostDto,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    try {
+      const { name, phone } = updatehostdto;
+      const cookie = req.cookies['jwtHost'];
+      const claims = this.jwtservice.verify(cookie);
+      await this.hostModel.findOneAndUpdate(
+        { _id: claims.id },
+        { $set: { name: name, phone: phone } },
+      );
+      console.log(updatehostdto);
+      return res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async changepass(data: any, @Res() res: Response, @Req() req: Request) {
+    try {
+      const { oldPass, password, confirmPass } = data;
+      console.log(oldPass, password, confirmPass);
+      const cookie = req.cookies['jwtHost'];
+      const claims = this.jwtservice.verify(cookie);
+      const hostData = await this.hostModel.findOne({ _id: claims.id });
+      const passMatch = await bcrypt.compare(oldPass, hostData.password);
+      if (!passMatch) {
+        return res.status(400).json({ message: 'Incorrect old password' });
+      }
+      const samePass = await bcrypt.compare(password, hostData.password);
+      if (samePass) {
+        return res
+          .status(403)
+          .json({ message: 'New password cannot be same as old password' });
+      }
+      const hashpass = await bcrypt.hash(password, 10);
+      await this.hostModel.findOneAndUpdate(
+        { _id: claims.id },
+        { $set: { password: hashpass } },
+      );
+      return res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async addVehicle(
+    files: any,
+    createvehicledto: CreateVehicleDto,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    try {
+      const { name, brand, fuel, transmission, model, price, isVerified } =
+        createvehicledto;
+      const cookie = req.cookies['jwtHost'];
+      const claims = this.jwtservice.verify(cookie);
+      const newCar = await this.vehicleModel.create({
+        name,
+        brand,
+        fuel,
+        transmission,
+        model,
+        price,
+        createdBy: claims.id,
+        isVerified,
+      });
+      if (newCar) await this.uploadVehicleImage(files, res, newCar._id);
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async uploadVehicleImage(files: any, @Res() res: Response, id?: string) {
+    try {
+      for (const f of files) {
+        await this.vehicleModel.findOneAndUpdate(
+          { _id: id },
+          { $push: { images: f.filename } },
+        );
+      }
+      return;
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
   }
 }

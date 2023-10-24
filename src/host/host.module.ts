@@ -5,10 +5,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { hostSchema } from './schemas/host.schemas';
+import { vehicleSchema } from 'src/admin/schemas/vehicles.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'Host', schema: hostSchema }]),
+    MongooseModule.forFeature([
+      { name: 'Host', schema: hostSchema },
+      { name: 'Vehicles', schema: vehicleSchema },
+    ]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {

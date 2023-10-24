@@ -1,11 +1,11 @@
-import { Injectable, Res, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Req, Res, UnauthorizedException } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { User } from 'src/user/schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Admin } from './schemas/admin.schema';
 import { AdminLoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { Host } from 'src/host/schemas/host.schemas';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -252,10 +252,15 @@ export class AdminService {
     });
   }
 
-  async addVehicle(createVehicle: CreateVehicleDto, @Res() res: Response) {
+  async addVehicle(
+    createVehicle: CreateVehicleDto,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
     try {
-      const { name, brand, model, transmission, fuel, price, createdBy } =
-        createVehicle;
+      const { name, brand, model, transmission, fuel, price } = createVehicle;
+      const cookie = req.cookies['jwtAdmin'];
+      const claims = this.jwtservice.verify(cookie);
       await this.vehicleModel.create({
         name,
         transmission,
@@ -263,7 +268,7 @@ export class AdminService {
         fuel,
         brand,
         price,
-        createdBy,
+        createdBy: claims.id,
       });
       res.status(200).json({ message: 'Success' });
     } catch (err) {

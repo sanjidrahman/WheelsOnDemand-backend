@@ -151,7 +151,6 @@ export class AuthService {
   async getUser(@Req() req: Request, @Res() res: Response) {
     try {
       const cookie = req.cookies['jwt'];
-      console.log(cookie);
 
       const claims = this.jwtservice.verify(cookie);
 

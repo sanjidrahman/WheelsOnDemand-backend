@@ -21,4 +21,10 @@ export class CreateVehicleDto {
 
   @IsOptional()
   image: string[];
+
+  @IsOptional()
+  createdBy: string;
+
+  @IsNotEmpty()
+  isVerified: boolean = false;
 }

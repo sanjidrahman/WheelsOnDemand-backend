@@ -23,6 +23,9 @@ export class Host extends Document {
 
   @Prop()
   document: string;
+
+  @Prop()
+  profile: string;
 }
 
 export const hostSchema = SchemaFactory.createForClass(Host);
