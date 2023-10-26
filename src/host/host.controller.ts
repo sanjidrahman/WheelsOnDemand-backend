@@ -10,6 +10,8 @@ import {
   Req,
   Patch,
   UploadedFiles,
+  Query,
+  Delete,
 } from '@nestjs/common';
 import { HostService } from './host.service';
 import { CreateHostDto } from './dto/create-host.dto';
@@ -21,6 +23,7 @@ import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/file-uploads.utils';
 import { UpdateHostDto } from './dto/update-host.dto';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
 @Controller('host')
 export class HostController {
@@ -107,6 +110,11 @@ export class HostController {
     return this.hostService.uplaodProfile(file, res, req);
   }
 
+  @Get('host-vehicles')
+  hostvehicle(@Res() res: Response, @Req() req: Request) {
+    return this.hostService.hostvehicles(res, req);
+  }
+
   @Post('add-vehicle')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
@@ -124,5 +132,43 @@ export class HostController {
     @Req() req: Request,
   ) {
     return this.hostService.addVehicle(files, createvehicledto, res, req);
+  }
+
+  @Patch('edit-vehicle/:id')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: './files',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+    }),
+  )
+  editVehicle(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Body() editVehicle: UpdateVehicleDto,
+    @Param('id') id: any,
+    @Res() res: Response,
+  ) {
+    return this.hostService.editVehicle(files, editVehicle, res, id);
+  }
+
+  @Patch('delete-image/:id')
+  deleteimg(
+    @Res() res: Response,
+    @Param('id') id: any,
+    @Query('file') file: string,
+  ) {
+    return this.hostService.deleteImage(res, id, file);
+  }
+
+  @Delete('delete-vehicle/:id')
+  deletevehicle(@Res() res: Response, @Param('id') id: string) {
+    return this.hostService.deleteVehicle(res, id);
+  }
+
+  @Post('logout')
+  logoutUser(@Req() req: Request, @Res() res: Response) {
+    return this.hostService.logout(req, res);
   }
 }

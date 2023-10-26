@@ -5,12 +5,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Admin } from './schemas/admin.schema';
 import { AdminLoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
-import { Response, Request } from 'express';
+import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { Host } from 'src/host/schemas/host.schemas';
 import { MailerService } from '@nestjs-modules/mailer';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { Vehicles } from './schemas/vehicles.schema';
+import { UpdateVehicleDto } from './dto/edit-vehicle.dto';
+import * as fs from 'fs';
 
 @Injectable()
 export class AdminService {
@@ -253,47 +255,208 @@ export class AdminService {
   }
 
   async addVehicle(
+    files: any,
     createVehicle: CreateVehicleDto,
     @Res() res: Response,
     @Req() req: Request,
   ) {
     try {
-      const { name, brand, model, transmission, fuel, price } = createVehicle;
+      const { name, brand, model, transmission, fuel, price, location } =
+        createVehicle;
       const cookie = req.cookies['jwtAdmin'];
       const claims = this.jwtservice.verify(cookie);
-      await this.vehicleModel.create({
+      const newVehicle = await this.vehicleModel.create({
         name,
         transmission,
         model,
         fuel,
         brand,
         price,
+        location,
         createdBy: claims.id,
       });
+      await this.uploadVehicleImage(files, res, newVehicle._id);
       res.status(200).json({ message: 'Success' });
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });
     }
   }
 
-  async uploadVehicleImage(files: any, id: string) {
-    // const response = [];
-    for (const f of files) {
-      await this.vehicleModel.findOneAndUpdate(
-        { _id: id },
-        { $push: { images: f.filename } },
-      );
+  async uploadVehicleImage(files: any, @Res() res: Response, id?: string) {
+    try {
+      for (const f of files) {
+        await this.vehicleModel.findOneAndUpdate(
+          { _id: id },
+          { $push: { images: f.filename } },
+        );
+      }
+      return;
+    } catch (error) {
+      res.status(500).json({ message: 'Internal Server Error' });
     }
-    return 'succes';
   }
 
   async getAllVehicles(@Res() res: Response) {
     try {
-      const vehicles = await this.vehicleModel.find({});
-      // res.status(200).json({ vehicles: vehicles, message: 'Success' });
+      const vehicles = await this.vehicleModel.find({}).populate('createdBy');
       res.send(vehicles);
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async verifyHostVehicle(@Res() res: Response, vid: string, hid: string) {
+    try {
+      await this.vehicleModel.findByIdAndUpdate(
+        { _id: vid },
+        { $set: { isVerified: true } },
+      );
+      const hostData = await this.hostModel.findOne({ _id: hid });
+      await this.vehicleVerifiedMail(hostData.email, hostData.name);
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async vehicleVerifiedMail(email: string, name: string) {
+    return this.mailService.sendMail({
+      to: email,
+      from: process.env.DEV_MAIL,
+      subject: 'WheelsOnDemand New Vehicle Request Verification',
+      text: 'WheelsOnDemand',
+      html: `
+        <table style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <tr>
+              <td style="text-align: center; background-color: #1976D2; padding: 10px; color: #fff;">
+                  <h1>New Vehicle Request Verified</h1>
+              </td>
+          </tr>
+          <tr>
+              <td style="padding: 20px;">
+                  <p>Hello, ${name} </p>
+                  <p>Your new vehicle request has been reviewed and verified by our team.</p>
+                  <p>You can now access our services with your new vehicle and start hosting with us.</p>
+                  <p>Thank you for choosing our platform. We look forward to having you as part of our community.</p>
+                  <p>If you have any questions or need further assistance, please feel free to contact our support team.</p>
+                  <p>Best regards,<br>Your WheelsOnDemand Team</p>
+              </td>
+          </tr>
+          <tr>
+              <td style="text-align: center; background-color: #1976D2; padding: 10px; color: #fff;">
+                  <p>&copy; 2023 WheelsOnDemand. All rights reserved.</p>
+              </td>
+          </tr>
+        </table>
+      `,
+    });
+  }
+
+  async rejectHostVehicle(@Res() res: Response, id: string, issue: string) {
+    try {
+      const hostData = await this.hostModel.findOne({ _id: id });
+      await this.vehicleRejectedMail(hostData.email, hostData.name, issue);
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async vehicleRejectedMail(email: string, name: string, issue: string) {
+    return this.mailService.sendMail({
+      to: email,
+      from: process.env.DEV_MAIL,
+      subject: 'WheelsOnDemand New Vehicle Request Review',
+      text: 'WheelsOnDemand',
+      html: `
+        <table style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <tr>
+              <td style="text-align: center; background-color: #FF5722; padding: 10px; color: #fff;">
+                  <h1>New Vehicle Request Review</h1>
+              </td>
+          </tr>
+          <tr>
+              <td style="padding: 20px;">
+                  <p>Hello, ${name} </p>
+                  <p>Your new vehicle request has been reviewed by our team, but we encountered an issue that requires your attention.</p>
+                  <p>Issue: <b>${issue}</b> </p>
+                  <p>You can resubmit your vehicle request by addressing the issue. Please click the button below to resubmit your request:</p>
+                  <p><a href="http://localhost:4200" style="text-decoration: none; padding: 10px 20px; background-color: #1976D2; color: #fff;">Resubmit Request</a></p>
+                  <p style='margin-top:3px'>If you have any questions or need further assistance, please feel free to contact our support team.</p>
+                  <p>Best regards,<br>Your WheelsOnDemand Team</p>
+              </td>
+          </tr>
+          <tr>
+              <td style="text-align: center; background-color: #FF5722; padding: 10px; color: #fff;">
+                  <p>&copy; 2023 WheelsOnDemand. All rights reserved.</p>
+              </td>
+          </tr>
+        </table>
+      `,
+    });
+  }
+
+  async editVehicle(
+    files: any,
+    editVehicle: UpdateVehicleDto,
+    @Res() res: Response,
+    id: string,
+  ) {
+    try {
+      const { name, brand, model, transmission, fuel, price, location } =
+        editVehicle;
+      await this.vehicleModel.findOneAndUpdate(
+        { _id: id },
+        { $set: { name, brand, model, transmission, fuel, price, location } },
+      );
+      await this.uploadVehicleImage(files, res, id);
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async deleteImage(@Res() res: Response, id: string, file: string) {
+    try {
+      const vehicleData = await this.vehicleModel.findOne({ _id: id });
+      if (vehicleData.images.length > 1) {
+        await this.vehicleModel.findByIdAndUpdate(
+          { _id: id },
+          { $pull: { images: file } },
+        );
+        fs.unlink(`./files/${file}`, (err) => {
+          if (err) {
+            console.log('somethiing went wrong', err);
+          } else {
+            console.log('unlinked');
+          }
+        });
+      } else {
+        return res
+          .status(400)
+          .json({ message: 'Vehicle should have one image' });
+      }
+      res.status(200).json({ message: 'Succuss' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async deleteVehicle(@Res() res: Response, id: string) {
+    try {
+      await this.vehicleModel.findOneAndDelete({ _id: id });
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async logout(@Req() req: Request, @Res() res: Response) {
+    try {
+      res.cookie('jwtAdmin', '', { maxAge: 0 });
+      res.status(200).json({ message: 'Logged out succesfully' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
     }
   }
 }

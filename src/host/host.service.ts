@@ -14,6 +14,8 @@ import { JwtService } from '@nestjs/jwt';
 import { stringify } from 'circular-json';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { Vehicles } from 'src/admin/schemas/vehicles.schema';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import * as fs from 'fs';
 
 @Injectable()
 export class HostService {
@@ -131,7 +133,6 @@ export class HostService {
       if (hostData) {
         if (!hostData.isBlocked) {
           if (hostData.isVerified) {
-            console.log(hostData.isVerified);
             const passMatch = await bcrypt.compare(password, hostData.password);
             if (passMatch) {
               const payload = { id: hostData._id, role: 'host' };
@@ -140,7 +141,9 @@ export class HostService {
                 httpOnly: true,
                 maxAge: 24 * 60 * 60 * 1000,
               });
-              return res.status(200).json({ message: 'Logged Successfully' });
+              return res
+                .status(200)
+                .json({ token, message: 'Logged Successfully' });
             } else {
               return res.status(400).json({ message: 'Wrong Password' });
             }
@@ -275,8 +278,16 @@ export class HostService {
     @Req() req: Request,
   ) {
     try {
-      const { name, brand, fuel, transmission, model, price, isVerified } =
-        createvehicledto;
+      const {
+        name,
+        brand,
+        fuel,
+        transmission,
+        model,
+        price,
+        isVerified,
+        location,
+      } = createvehicledto;
       const cookie = req.cookies['jwtHost'];
       const claims = this.jwtservice.verify(cookie);
       const newCar = await this.vehicleModel.create({
@@ -286,6 +297,7 @@ export class HostService {
         transmission,
         model,
         price,
+        location,
         createdBy: claims.id,
         isVerified,
       });
@@ -307,6 +319,84 @@ export class HostService {
       return;
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async hostvehicles(@Res() res: Response, @Req() req: Request) {
+    try {
+      const cookie = req.cookies['jwtHost'];
+      const claims = this.jwtservice.verify(cookie);
+      const vehicle = await this.vehicleModel.find({
+        createdBy: claims.id,
+        isVerified: true,
+      });
+      res.send(vehicle);
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async editVehicle(
+    files: any,
+    editVehicle: UpdateVehicleDto,
+    @Res() res: Response,
+    id: string,
+  ) {
+    try {
+      const { name, brand, model, transmission, fuel, price, location } =
+        editVehicle;
+      await this.vehicleModel.findOneAndUpdate(
+        { _id: id },
+        { $set: { name, brand, model, transmission, fuel, price, location } },
+      );
+      await this.uploadVehicleImage(files, res, id);
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async deleteImage(@Res() res: Response, id: string, file: string) {
+    try {
+      const vehicleData = await this.vehicleModel.findOne({ _id: id });
+      if (vehicleData.images.length > 1) {
+        await this.vehicleModel.findByIdAndUpdate(
+          { _id: id },
+          { $pull: { images: file } },
+        );
+        fs.unlink(`./files/${file}`, (err) => {
+          if (err) {
+            console.log('somethiing went wrong', err);
+          } else {
+            console.log('unlinked');
+          }
+        });
+      } else {
+        return res
+          .status(400)
+          .json({ message: 'Vehicle should have one image' });
+      }
+      res.status(200).json({ message: 'Succuss' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async deleteVehicle(@Res() res: Response, id: string) {
+    try {
+      await this.vehicleModel.findOneAndDelete({ _id: id });
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async logout(@Req() req: Request, @Res() res: Response) {
+    try {
+      res.cookie('jwtHost', '', { maxAge: 0 });
+      res.status(200).json({ message: 'Logged out succesfully' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
     }
   }
 }

@@ -11,6 +11,9 @@ export class CreateVehicleDto {
   fuel: string;
 
   @IsNotEmpty()
+  location: string;
+
+  @IsNotEmpty()
   transmission: string;
 
   @IsNotEmpty()

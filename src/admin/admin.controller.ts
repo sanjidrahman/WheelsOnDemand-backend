@@ -11,14 +11,17 @@ import {
   UploadedFiles,
   UploadedFile,
   Req,
+  Query,
+  Delete,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { Response, Request } from 'express';
+import { Request, Response } from 'express';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/file-uploads.utils';
 import * as path from 'path';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
+import { UpdateVehicleDto } from './dto/edit-vehicle.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -72,7 +75,7 @@ export class AdminController {
 
   @Post('host/verify-host/:id')
   verifyHost(@Param('id') id: any, @Res() res: Response) {
-    this.adminService.verifyHost(id, res);
+    return this.adminService.verifyHost(id, res);
   }
 
   @Post('host/host-notverify/:id')
@@ -81,24 +84,15 @@ export class AdminController {
     @Body() issue: string,
     @Res() res: Response,
   ) {
-    this.adminService.hostNotVerified(id, issue, res);
+    return this.adminService.hostNotVerified(id, issue, res);
   }
 
   @Get('vehicles')
   allVehicles(@Res() res: Response) {
-    this.adminService.getAllVehicles(res);
+    return this.adminService.getAllVehicles(res);
   }
 
   @Post('add-vehicle')
-  add(
-    @Body() createVehicle: CreateVehicleDto,
-    @Res() res: Response,
-    @Req() req: Request,
-  ) {
-    this.adminService.addVehicle(createVehicle, res, req);
-  }
-
-  @Post('upload-vehicle-images/:id')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: diskStorage({
@@ -110,9 +104,63 @@ export class AdminController {
   )
   uploadFile(
     @UploadedFiles() files: Array<Express.Multer.File>,
+    @Body() createVehicle: CreateVehicleDto,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    console.log(files, createVehicle);
+    return this.adminService.addVehicle(files, createVehicle, res, req);
+  }
+
+  @Patch('verify-host-vehicle')
+  verifyhostvehicle(
+    @Res() res: Response,
+    @Query('vehicleid') vid: string,
+    @Query('hostid') hid: string,
+  ) {
+    this.adminService.verifyHostVehicle(res, vid, hid);
+  }
+
+  @Post('reject-host-vehicle/:id')
+  rejecthostvehicle(
+    @Res() res: Response,
+    @Body() issue: any,
     @Param('id') id: string,
   ) {
-    return this.adminService.uploadVehicleImage(files, id);
+    this.adminService.rejectHostVehicle(res, id, issue.issue);
+  }
+
+  @Patch('edit-vehicle/:id')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: './files',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+    }),
+  )
+  editVehicle(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Body() editVehicle: UpdateVehicleDto,
+    @Param('id') id: any,
+    @Res() res: Response,
+  ) {
+    return this.adminService.editVehicle(files, editVehicle, res, id);
+  }
+
+  @Patch('delete-image/:id')
+  deleteimg(
+    @Res() res: Response,
+    @Param('id') id: any,
+    @Query('file') file: string,
+  ) {
+    return this.adminService.deleteImage(res, id, file);
+  }
+
+  @Delete('delete-vehicle/:id')
+  deletevehicle(@Res() res: Response, @Param('id') id: string) {
+    return this.adminService.deleteVehicle(res, id);
   }
 
   @Post('/upload-single')
@@ -120,9 +168,7 @@ export class AdminController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: './files',
-        filename: (req, file, callback) => {
-          callback(null, `${file.originalname}`);
-        },
+        filename: editFileName,
       }),
       fileFilter: imageFileFilter,
     }),
@@ -133,5 +179,10 @@ export class AdminController {
       filename: file.filename,
     };
     return response;
+  }
+
+  @Post('logout')
+  logoutUser(@Req() req: Request, @Res() res: Response) {
+    return this.adminService.logout(req, res);
   }
 }

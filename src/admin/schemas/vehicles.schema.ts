@@ -21,7 +21,10 @@ export class Vehicles extends Document {
   @Prop()
   fuel: string;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Person' })
+  @Prop()
+  location: string;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Host' })
   createdBy: Types.ObjectId;
 
   @Prop([String])
