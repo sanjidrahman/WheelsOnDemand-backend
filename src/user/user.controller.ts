@@ -4,6 +4,7 @@ import { AuthService } from './user.service';
 import { Signupdto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
+import { ChoiseDto } from './dto/choice.dto';
 
 @Controller('user')
 export class AuthController {
@@ -30,8 +31,13 @@ export class AuthController {
   }
 
   @Post('verify-otp')
-  verify(@Res({ passthrough: true }) res: Response , @Body() otp: any){
+  verify(@Res({ passthrough: true }) res: Response , @Body() otp: any) {
     return this.authservice.verifyOtp(res , otp)
+  }
+
+  @Post('vehicles') 
+  getVehicles(@Res({ passthrough: true }) res: Response, @Body() choisedto: ChoiseDto ) {
+    return this.authservice.getVehicles(res, choisedto);
   }
 
   @Post('logout')

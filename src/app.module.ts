@@ -8,10 +8,9 @@ import { AdminModule } from './admin/admin.module';
 import { HostModule } from './host/host.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MulterModule } from '@nestjs/platform-express';
-import { Middleware } from './auth/auth.middleware';
-import { JwtService } from '@nestjs/jwt';
 import { exclude } from './auth/auth.excluded';
-import { AuthModule } from './auth/auth.module';
+import { AuthMiddleware } from './auth/auth.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -42,16 +41,15 @@ import { AuthModule } from './auth/auth.module';
     UserModule,
     AdminModule,
     HostModule,
-    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtService],
 })
-export class AppModule {
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer
-  //     .apply(Middleware)
-  //     .exclude(...exclude)
-  //     .forRoutes('*');
-  // }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthMiddleware)
+      .exclude(...exclude)
+      .forRoutes('*');
+  }
 }

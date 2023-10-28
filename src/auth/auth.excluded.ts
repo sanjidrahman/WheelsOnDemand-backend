@@ -6,4 +6,5 @@ export const exclude = [
   'host/login',
   'host/verify-otp',
   'admin/login',
+  'admin/getFile/:filename',
 ];

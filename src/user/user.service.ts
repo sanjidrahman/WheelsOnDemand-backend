@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { JwtService } from '@nestjs/jwt';
 import { Injectable, Req, Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -10,6 +9,8 @@ import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as otpgenerater from 'otp-generator';
+import { Vehicles } from 'src/admin/schemas/vehicles.schema';
+import { ChoiseDto } from './dto/choice.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,8 @@ export class AuthService {
   constructor(
     @InjectModel(User.name)
     private userModel: Model<User>,
+    @InjectModel('Vehicle')
+    private vehicleModel: Model<Vehicles>,
     private jwtservice: JwtService,
     private mailer: MailerService,
   ) {}
@@ -161,6 +164,31 @@ export class AuthService {
       res.send(data);
     } catch (err) {
       throw new Error('Failed to get user');
+    }
+  }
+
+  async getVehicles(@Res() res: Response, choisedto: ChoiseDto) {
+    try {
+      const { startDate, endDate, pickup, dropoff } = choisedto;
+      const customPrice: number[] = [];
+      console.log(startDate, endDate, pickup, dropoff);
+      const startDateOrg = new Date(startDate);
+      const endDateOrg = new Date(endDate);
+      const timeDiff = endDateOrg.getTime() - startDateOrg.getTime();
+      const days = timeDiff / (1000 * 3600 * 24);
+      const vehicleData = await this.vehicleModel.find({ isVerified: true });
+      vehicleData.forEach((i) => {
+        if (days % 7 == 0) {
+          const discount = (i.price * 10) / 100;
+          customPrice.push(i.price - discount);
+        } else {
+          customPrice.push(i.price * days);
+        }
+      });
+      console.log(vehicleData, customPrice);
+      res.status(200).json({ vehicleData, customPrice });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
     }
   }
 
