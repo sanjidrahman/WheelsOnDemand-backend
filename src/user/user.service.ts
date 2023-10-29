@@ -1,5 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
-import { Injectable, Req, Res } from '@nestjs/common';
+import { Body, Injectable, Req, Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
@@ -15,6 +15,7 @@ import { ChoiseDto } from './dto/choice.dto';
 @Injectable()
 export class AuthService {
   tempUser: any;
+  tempChoice: any;
   otpgenetated: any;
   constructor(
     @InjectModel(User.name)
@@ -167,28 +168,34 @@ export class AuthService {
     }
   }
 
-  async getVehicles(@Res() res: Response, choisedto: ChoiseDto) {
+  async storeChoices(@Res() res: Response, choisedto: ChoiseDto) {
     try {
-      const { startDate, endDate, pickup, dropoff } = choisedto;
-      const customPrice: number[] = [];
-      console.log(startDate, endDate, pickup, dropoff);
-      const startDateOrg = new Date(startDate);
-      const endDateOrg = new Date(endDate);
-      const timeDiff = endDateOrg.getTime() - startDateOrg.getTime();
-      const days = timeDiff / (1000 * 3600 * 24);
-      const vehicleData = await this.vehicleModel.find({ isVerified: true });
-      vehicleData.forEach((i) => {
-        if (days % 7 == 0) {
-          const discount = (i.price * 10) / 100;
-          customPrice.push(i.price - discount);
-        } else {
-          customPrice.push(i.price * days);
-        }
-      });
-      console.log(vehicleData, customPrice);
-      res.status(200).json({ vehicleData, customPrice });
+      if (choisedto.userId) {
+        const { userId, ...data } = choisedto;
+        console.log(data);
+        await this.userModel.findOneAndUpdate(
+          { _id: userId },
+          { $set: { choices: data } },
+        );
+        console.log('ddd');
+        return res.status(200).json({ message: 'Success' });
+      } else {
+        this.tempChoice = choisedto;
+        console.log(this.tempChoice);
+      }
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      return res.status(500).json({ message: 'Internal Servet Error' });
+    }
+  }
+
+  async getVehicles(@Res() res: Response, @Body() userId?: string) {
+    try {
+      console.log(userId);
+      const vehicleData = await this.vehicleModel.find({ isVerified: true });
+      console.log(vehicleData);
+      return res.status(200).send({ vehicleData });
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Error' });
     }
   }
 

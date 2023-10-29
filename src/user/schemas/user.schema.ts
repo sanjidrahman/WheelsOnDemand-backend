@@ -17,6 +17,14 @@ export class User extends Document {
 
   @Prop({ default: false })
   isBlocked: boolean;
+
+  @Prop({ type: Object })
+  choices: {
+    startDate: string;
+    endDate: string;
+    pickup: string;
+    dropoff: string;
+  };
 }
 
 export const userSchema = SchemaFactory.createForClass(User);

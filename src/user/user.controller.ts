@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Req, Res } from '@nestjs/common';
 import { AuthService } from './user.service';
 import { Signupdto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
@@ -35,9 +35,16 @@ export class AuthController {
     return this.authservice.verifyOtp(res , otp)
   }
 
-  @Post('vehicles') 
-  getVehicles(@Res({ passthrough: true }) res: Response, @Body() choisedto: ChoiseDto ) {
-    return this.authservice.getVehicles(res, choisedto);
+  @Put('store-choice')
+  storeChoice(@Res({ passthrough: true }) res: Response, @Body() choicedto: ChoiseDto) {
+    console.log('djfkodsj');
+    console.log(choicedto.userId);
+    return this.authservice.storeChoices(res, choicedto);
+  }
+
+  @Get('vehicles') 
+  getVehicles(@Res({ passthrough: true }) res: Response ) {
+    return this.authservice.getVehicles(res);
   }
 
   @Post('logout')
