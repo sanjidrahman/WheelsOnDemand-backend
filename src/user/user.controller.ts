@@ -1,17 +1,29 @@
-/* eslint-disable prettier/prettier */
-import { Body, Controller, Get, Post, Put, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { AuthService } from './user.service';
 import { Signupdto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { ChoiseDto } from './dto/choice.dto';
+import { CreateBookingDto } from './dto/create-booking.dto';
 
 @Controller('user')
 export class AuthController {
-  constructor(private authservice: AuthService) { }
+  constructor(private authservice: AuthService) {}
 
   @Post('signup')
-  signup(@Body() signupdto: Signupdto, @Res({ passthrough: true }) res: Response) {
+  signup(
+    @Body() signupdto: Signupdto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     return this.authservice.signup(signupdto, res);
   }
 
@@ -22,34 +34,47 @@ export class AuthController {
 
   @Post('auth/login')
   googlelogin(@Body() user: any, @Res({ passthrough: true }) res: Response) {
-    return this.authservice.googleReg(user, res)
+    return this.authservice.googleReg(user, res);
   }
 
   @Get('getuser')
   getUser(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    return this.authservice.getUser(req, res)
+    return this.authservice.getUser(req, res);
   }
 
   @Post('verify-otp')
-  verify(@Res({ passthrough: true }) res: Response , @Body() otp: any) {
-    return this.authservice.verifyOtp(res , otp)
+  verify(@Res({ passthrough: true }) res: Response, @Body() otp: any) {
+    return this.authservice.verifyOtp(res, otp);
   }
 
   @Put('store-choice')
-  storeChoice(@Res({ passthrough: true }) res: Response, @Body() choicedto: ChoiseDto) {
-    console.log('djfkodsj');
-    console.log(choicedto.userId);
+  storeChoice(
+    @Res({ passthrough: true }) res: Response,
+    @Body() choicedto: ChoiseDto,
+  ) {
     return this.authservice.storeChoices(res, choicedto);
   }
 
-  @Get('vehicles') 
-  getVehicles(@Res({ passthrough: true }) res: Response ) {
+  @Get('vehicles')
+  getVehicles(@Res({ passthrough: true }) res: Response) {
     return this.authservice.getVehicles(res);
+  }
+
+  @Post('book-vehicle')
+  postBooking(
+    @Body() createbookingdto: CreateBookingDto,
+    @Res() res: Response,
+  ) {
+    return this.authservice.booking(createbookingdto, res);
+  }
+
+  @Get('booking-details/:id')
+  getBookingDetails(@Res() res: Response, @Param('id') bookingid: string) {
+    this.authservice.getBooking(res, bookingid);
   }
 
   @Post('logout')
   logoutUser(@Req() req: Request, @Res() res: Response) {
-    return this.authservice.logout(req , res)
+    return this.authservice.logout(req, res);
   }
 }
-

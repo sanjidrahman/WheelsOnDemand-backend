@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { vehicleSchema } from 'src/admin/schemas/vehicles.schema';
+import { BookingSchema } from './schemas/bookings.schema';
 // import { JwtStrategy } from './jwt.strategy';
 
 @Module({
@@ -27,6 +28,7 @@ import { vehicleSchema } from 'src/admin/schemas/vehicles.schema';
     MongooseModule.forFeature([
       { name: 'User', schema: userSchema },
       { name: 'Vehicle', schema: vehicleSchema },
+      { name: 'Booking', schema: BookingSchema },
     ]),
   ],
   controllers: [AuthController],

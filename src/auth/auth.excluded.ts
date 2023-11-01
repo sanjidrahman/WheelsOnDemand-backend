@@ -3,8 +3,8 @@ export const exclude = [
   '/user/signup',
   '/user/auth/login',
   '/host/signup',
-  'host/login',
-  'host/verify-otp',
-  'admin/login',
-  'admin/getFile/:filename',
+  '/host/login',
+  '/host/verify-otp',
+  '/admin/login',
+  '/admin/getFile/:filename',
 ];

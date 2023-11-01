@@ -1,5 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
-import { Body, Injectable, Req, Res } from '@nestjs/common';
+import { Injectable, Req, Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
@@ -11,6 +11,8 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as otpgenerater from 'otp-generator';
 import { Vehicles } from 'src/admin/schemas/vehicles.schema';
 import { ChoiseDto } from './dto/choice.dto';
+import { CreateBookingDto } from './dto/create-booking.dto';
+import { Booking } from './schemas/bookings.schema';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,8 @@ export class AuthService {
     private userModel: Model<User>,
     @InjectModel('Vehicle')
     private vehicleModel: Model<Vehicles>,
+    @InjectModel('Booking')
+    private bookingModel: Model<Booking>,
     private jwtservice: JwtService,
     private mailer: MailerService,
   ) {}
@@ -172,12 +176,10 @@ export class AuthService {
     try {
       if (choisedto.userId) {
         const { userId, ...data } = choisedto;
-        console.log(data);
         await this.userModel.findOneAndUpdate(
           { _id: userId },
           { $set: { choices: data } },
         );
-        console.log('ddd');
         return res.status(200).json({ message: 'Success' });
       } else {
         this.tempChoice = choisedto;
@@ -188,14 +190,58 @@ export class AuthService {
     }
   }
 
-  async getVehicles(@Res() res: Response, @Body() userId?: string) {
+  async getVehicles(@Res() res: Response) {
     try {
-      console.log(userId);
       const vehicleData = await this.vehicleModel.find({ isVerified: true });
-      console.log(vehicleData);
-      return res.status(200).send({ vehicleData });
+      res.status(200).send({ vehicleData });
     } catch (err) {
-      return res.status(500).json({ message: 'Internal Error' });
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async booking(createbookingdto: CreateBookingDto, @Res() res: Response) {
+    try {
+      const {
+        userId,
+        vehicleId,
+        razorId,
+        pickup,
+        dropoff,
+        startDate,
+        endDate,
+        total,
+        grandTotal,
+      } = createbookingdto;
+      await this.userModel.findOneAndUpdate(
+        { _id: userId },
+        { $unset: { choices: 1 } },
+      );
+      const bookingDetails = await this.bookingModel.create({
+        userId,
+        vehicleId,
+        razorId: razorId.razorpay_payment_id,
+        pickup,
+        dropoff,
+        startDate,
+        endDate,
+        total,
+        grandTotal,
+      });
+      res.status(200).json({ bookingId: bookingDetails._id });
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async getBooking(@Res() res: Response, bookingid: string) {
+    try {
+      const bookingDetails = await this.bookingModel
+        .find({ _id: bookingid })
+        .populate('userId')
+        .populate('vehicleId');
+      return res.status(200).send(bookingDetails);
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
 
