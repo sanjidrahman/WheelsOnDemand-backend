@@ -16,7 +16,12 @@ import {
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { Request, Response } from 'express';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import {
+  AnyFilesInterceptor,
+  FileFieldsInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/file-uploads.utils';
 import * as path from 'path';
@@ -94,21 +99,28 @@ export class AdminController {
 
   @Post('add-vehicle')
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      storage: diskStorage({
-        destination: './files',
-        filename: editFileName,
-      }),
-      fileFilter: imageFileFilter,
-    }),
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 10 },
+        { name: 'doc', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './files',
+          filename: editFileName,
+        }),
+        fileFilter: imageFileFilter,
+      },
+    ),
   )
   uploadFile(
-    @UploadedFiles() files: Array<Express.Multer.File>,
+    @UploadedFiles()
+    files: { files: Array<Express.Multer.File>; doc: Express.Multer.File },
     @Body() createVehicle: CreateVehicleDto,
     @Res() res: Response,
     @Req() req: Request,
   ) {
-    console.log(files, createVehicle);
+    console.log(files, 'ABC', createVehicle);
     return this.adminService.addVehicle(files, createVehicle, res, req);
   }
 

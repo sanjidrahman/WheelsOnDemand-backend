@@ -22,6 +22,9 @@ export class CreateVehicleDto {
   @IsNotEmpty()
   price: number;
 
+  // @IsNotEmpty()
+  // document: string;
+
   @IsOptional()
   image: string[];
 }

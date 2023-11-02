@@ -63,6 +63,7 @@ export class AuthService {
       }
 
       console.log(this.otpgenetated);
+      res.status(200).json({ message: 'Success' });
     } catch (error) {
       if (error.code === 11000) {
         return res.status(400).json({ message: 'Email is registered!' });

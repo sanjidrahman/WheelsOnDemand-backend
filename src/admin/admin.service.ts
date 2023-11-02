@@ -265,17 +265,20 @@ export class AdminService {
         createVehicle;
       const cookie = req.cookies['jwtAdmin'];
       const claims = this.jwtservice.verify(cookie);
-      const newVehicle = await this.vehicleModel.create({
-        name,
-        transmission,
-        model,
-        fuel,
-        brand,
-        price,
-        location,
-        createdBy: claims.id,
+      // const newVehicle = await this.vehicleModel.create({
+      //   name,
+      //   transmission,
+      //   model,
+      //   fuel,
+      //   brand,
+      //   price,
+      //   location,
+      //   createdBy: claims.id,
+      // });
+      files.forEach((e) => {
+        console.log(e.fieldname);
       });
-      await this.uploadVehicleImage(files, res, newVehicle._id);
+      // await this.uploadVehicleImage(files, res, newVehicle._id);
       res.status(200).json({ message: 'Success' });
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });

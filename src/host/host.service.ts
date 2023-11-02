@@ -16,6 +16,7 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { Vehicles } from 'src/admin/schemas/vehicles.schema';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import * as fs from 'fs';
+import { log } from 'console';
 
 @Injectable()
 export class HostService {
@@ -44,7 +45,7 @@ export class HostService {
       if (existNumber) {
         return res
           .status(400)
-          .json({ message: 'Phone numberm is already registered' });
+          .json({ message: 'Phone number is already registered' });
       }
 
       if (name && email && password && phone && confirmPass) {
@@ -57,6 +58,7 @@ export class HostService {
         console.log(this.otpgenerated);
         await this.sendMail(name, email, this.otpgenerated);
         const hashpass = await bcrypt.hash(password, 10);
+        console.log(hashpass);
         this.tempHost = {
           name: name,
           phone: phone,
@@ -64,6 +66,7 @@ export class HostService {
           password: hashpass,
         };
       }
+      console.log(this.tempHost);
 
       res.status(200).json({ message: 'Success' });
     } catch (err) {
