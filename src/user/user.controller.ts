@@ -52,12 +52,13 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Body() choicedto: ChoiseDto,
   ) {
+    console.log(choicedto);
     return this.authservice.storeChoices(res, choicedto);
   }
 
   @Get('vehicles')
-  getVehicles(@Res({ passthrough: true }) res: Response) {
-    return this.authservice.getVehicles(res);
+  getVehicles(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
+    return this.authservice.getVehicles(res, req);
   }
 
   @Post('book-vehicle')

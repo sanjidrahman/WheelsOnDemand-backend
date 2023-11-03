@@ -30,6 +30,9 @@ export class Vehicles extends Document {
   @Prop([String])
   images: string[];
 
+  @Prop()
+  document: string;
+
   @Prop({ default: true })
   isVerified: boolean;
 }

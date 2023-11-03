@@ -18,7 +18,11 @@ import { CreateHostDto } from './dto/create-host.dto';
 // import { UpdateHostDto } from './dto/update-host.dto';
 import { Request, Response } from 'express';
 import { LoginHostDto } from './dto/login-host.dto';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/file-uploads.utils';
 import { UpdateHostDto } from './dto/update-host.dto';
@@ -117,13 +121,19 @@ export class HostController {
 
   @Post('add-vehicle')
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      storage: diskStorage({
-        destination: './files',
-        filename: editFileName,
-      }),
-      fileFilter: imageFileFilter,
-    }),
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 10 },
+        { name: 'doc', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './files',
+          filename: editFileName,
+        }),
+        fileFilter: imageFileFilter,
+      },
+    ),
   )
   uploadFile(
     @UploadedFiles() files: Array<Express.Multer.File>,

@@ -304,8 +304,11 @@ export class HostService {
         createdBy: claims.id,
         isVerified,
       });
-      if (newCar) await this.uploadVehicleImage(files, res, newCar._id);
-      res.status(200).json({ message: 'Success' });
+      if (newCar) {
+        await this.uploadVehicleImage(files.files, res, newCar._id);
+        await this.uploadVehicleDoc(files.doc[0], res, newCar._id);
+      }
+      return res.status(200).json({ message: 'Success' });
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });
     }
@@ -319,6 +322,18 @@ export class HostService {
           { $push: { images: f.filename } },
         );
       }
+      return;
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async uploadVehicleDoc(doc: any, @Res() res: Response, id?: string) {
+    try {
+      await this.vehicleModel.findOneAndUpdate(
+        { _id: id },
+        { $set: { document: doc.filename } },
+      );
       return;
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });

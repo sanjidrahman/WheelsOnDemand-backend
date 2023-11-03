@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { JwtService } from '@nestjs/jwt';
 import { Injectable, Req, Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -13,6 +14,7 @@ import { Vehicles } from 'src/admin/schemas/vehicles.schema';
 import { ChoiseDto } from './dto/choice.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { Booking } from './schemas/bookings.schema';
+import * as moment from 'moment';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +30,7 @@ export class AuthService {
     private bookingModel: Model<Booking>,
     private jwtservice: JwtService,
     private mailer: MailerService,
-  ) {}
+  ) { }
 
   async signup(
     signupdto: Signupdto,
@@ -176,12 +178,20 @@ export class AuthService {
   async storeChoices(@Res() res: Response, choisedto: ChoiseDto) {
     try {
       if (choisedto.userId) {
-        const { userId, ...data } = choisedto;
+        const { userId, startDate, endDate, pickup, dropoff } = choisedto;
+        const updatedStartDate = moment(startDate).format('YYYY-MM-DD')
+        const updatedEndDate = moment(endDate).format('YYYY-MM-DD')
+        const updateChoice = {
+          startDate: updatedStartDate,
+          endDate: updatedEndDate,
+          pickup,
+          dropoff
+        }
         await this.userModel.findOneAndUpdate(
           { _id: userId },
-          { $set: { choices: data } },
+          { $set: { choices: updateChoice } },
         );
-        return res.status(200).json({ message: 'Success' });
+        res.status(200).json({ message: 'Success' });
       } else {
         this.tempChoice = choisedto;
         console.log(this.tempChoice);
@@ -191,12 +201,81 @@ export class AuthService {
     }
   }
 
-  async getVehicles(@Res() res: Response) {
+  async getVehicles(@Res() res: Response, @Req() req: Request) {
     try {
-      const vehicleData = await this.vehicleModel.find({ isVerified: true });
-      res.status(200).send({ vehicleData });
+      const userDetails = await this.userModel.findById({
+        _id: req.body.userId,
+      });
+      const vehicles = await this.vehicleModel.aggregate([
+        {
+          $lookup: {
+            from: 'bookings',
+            localField: '_id',
+            foreignField: 'vehicleId',
+            as: 'bookings',
+          },
+        },
+        {
+          $match: {
+            $expr: {
+              $not: {
+                $anyElementTrue: [
+                  {
+                    $map: {
+                      input: '$bookings',
+                      as: 'booking',
+                      in: {
+                        $and: [
+                          {
+                            $lte: [
+                              '$$booking.startDate',
+                              userDetails.choices.startDate,
+                            ],
+                          },
+                          {
+                            $gte: [
+                              '$$booking.endDate',
+                              userDetails.choices.endDate,
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+            isVerified: true,
+          },
+        },
+      ]);
+
+      // const vehicles = await this.vehicleModel.aggregate([
+      //   {
+      //     $lookup: {
+      //       from: 'bookings',
+      //       localField: '_id',
+      //       foreignField: 'vehicleId',
+      //       as: 'Booked',
+      //     },
+      //   },
+      //   {
+      //     $match: {
+      //       $not: {
+      //         $elemMatch: {
+      //           $and: [
+      //             { $lte: ['$Booked.startDate', userDetails.choices.startDate] },
+      //             { $gte: ['$Booked.endDate', userDetails.choices.endDate] },
+      //           ],
+      //         },
+      //       },
+      //     },
+      //   },
+      // ]);
+      console.log(vehicles);
+      res.status(200).send({ vehicles });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      return res.status(500).json({ message: 'Internal Error' });
     }
   }
 

@@ -17,7 +17,6 @@ import {
 import { AdminService } from './admin.service';
 import { Request, Response } from 'express';
 import {
-  AnyFilesInterceptor,
   FileFieldsInterceptor,
   FileInterceptor,
   FilesInterceptor,
@@ -93,8 +92,9 @@ export class AdminController {
   }
 
   @Get('vehicles')
-  allVehicles(@Res() res: Response) {
-    return this.adminService.getAllVehicles(res);
+  allVehicles(@Res() res: Response, @Query('page') page?: number) {
+    console.log(page, 'PAGE');
+    return this.adminService.getAllVehicles(res, page);
   }
 
   @Post('add-vehicle')
@@ -120,7 +120,6 @@ export class AdminController {
     @Res() res: Response,
     @Req() req: Request,
   ) {
-    console.log(files, 'ABC', createVehicle);
     return this.adminService.addVehicle(files, createVehicle, res, req);
   }
 
@@ -173,6 +172,11 @@ export class AdminController {
   @Delete('delete-vehicle/:id')
   deletevehicle(@Res() res: Response, @Param('id') id: string) {
     return this.adminService.deleteVehicle(res, id);
+  }
+
+  @Get('pagination')
+  pagination(@Res() res: Response) {
+    return this.adminService.pagination(res);
   }
 
   @Post('/upload-single')

@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { vehicleSchema } from 'src/admin/schemas/vehicles.schema';
 import { BookingSchema } from './schemas/bookings.schema';
+import moment from 'moment';
 // import { JwtStrategy } from './jwt.strategy';
 
 @Module({
@@ -32,6 +33,12 @@ import { BookingSchema } from './schemas/bookings.schema';
     ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [
+    AuthService,
+    {
+      provide: 'MomentWrapper',
+      useValue: moment,
+    },
+  ],
 })
 export class UserModule {}

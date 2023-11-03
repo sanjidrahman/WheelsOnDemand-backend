@@ -265,20 +265,18 @@ export class AdminService {
         createVehicle;
       const cookie = req.cookies['jwtAdmin'];
       const claims = this.jwtservice.verify(cookie);
-      // const newVehicle = await this.vehicleModel.create({
-      //   name,
-      //   transmission,
-      //   model,
-      //   fuel,
-      //   brand,
-      //   price,
-      //   location,
-      //   createdBy: claims.id,
-      // });
-      files.forEach((e) => {
-        console.log(e.fieldname);
+      const newVehicle = await this.vehicleModel.create({
+        name,
+        transmission,
+        model,
+        fuel,
+        brand,
+        price,
+        location,
+        createdBy: claims.id,
       });
-      // await this.uploadVehicleImage(files, res, newVehicle._id);
+      await this.uploadVehicleImage(files.files, res, newVehicle._id);
+      await this.uploadVehicleDoc(files.doc[0], res, newVehicle._id);
       res.status(200).json({ message: 'Success' });
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });
@@ -299,10 +297,40 @@ export class AdminService {
     }
   }
 
-  async getAllVehicles(@Res() res: Response) {
+  async uploadVehicleDoc(doc: any, @Res() res: Response, id?: string) {
     try {
-      const vehicles = await this.vehicleModel.find({}).populate('createdBy');
-      res.send(vehicles);
+      await this.vehicleModel.findOneAndUpdate(
+        { _id: id },
+        { $set: { document: doc.filename } },
+      );
+      return;
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async getAllVehicles(@Res() res: Response, page: number) {
+    try {
+      const perPage = 6;
+      const currPage = perPage * Number(page - 1);
+      const skip = perPage * (currPage - 1);
+      const vehicles = await this.vehicleModel
+        .find({})
+        .populate('createdBy')
+        .limit(perPage)
+        .skip(skip);
+      res.status(200).send(vehicles);
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async pagination(@Res() res: Response) {
+    try {
+      const perPage = 3;
+      const count = await this.vehicleModel.countDocuments();
+      const totalPage = Math.ceil(count / perPage);
+      res.status(200).json({ totalPage });
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });
     }
