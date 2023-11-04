@@ -71,7 +71,12 @@ export class AuthController {
 
   @Get('booking-details/:id')
   getBookingDetails(@Res() res: Response, @Param('id') bookingid: string) {
-    this.authservice.getBooking(res, bookingid);
+    return this.authservice.getBooking(res, bookingid);
+  }
+
+  @Get('user-booking')
+  getUserBooking(@Res() res: Response, @Req() req: Request) {
+    return this.authservice.userbookings(res, req);
   }
 
   @Post('logout')

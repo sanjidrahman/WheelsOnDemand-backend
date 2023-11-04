@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { JwtService } from '@nestjs/jwt';
 import { Injectable, Req, Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -30,7 +29,7 @@ export class AuthService {
     private bookingModel: Model<Booking>,
     private jwtservice: JwtService,
     private mailer: MailerService,
-  ) { }
+  ) {}
 
   async signup(
     signupdto: Signupdto,
@@ -179,14 +178,14 @@ export class AuthService {
     try {
       if (choisedto.userId) {
         const { userId, startDate, endDate, pickup, dropoff } = choisedto;
-        const updatedStartDate = moment(startDate).format('YYYY-MM-DD')
-        const updatedEndDate = moment(endDate).format('YYYY-MM-DD')
+        const updatedStartDate = moment(startDate).format('YYYY-MM-DD');
+        const updatedEndDate = moment(endDate).format('YYYY-MM-DD');
         const updateChoice = {
           startDate: updatedStartDate,
           endDate: updatedEndDate,
           pickup,
-          dropoff
-        }
+          dropoff,
+        };
         await this.userModel.findOneAndUpdate(
           { _id: userId },
           { $set: { choices: updateChoice } },
@@ -272,10 +271,10 @@ export class AuthService {
       //     },
       //   },
       // ]);
-      console.log(vehicles);
+      // console.log(vehicles);
       res.status(200).send({ vehicles });
     } catch (err) {
-      return res.status(500).json({ message: 'Internal Error' });
+      res.status(500).json({ message: 'Internal Error' });
     }
   }
 
@@ -320,6 +319,18 @@ export class AuthService {
         .populate('userId')
         .populate('vehicleId');
       return res.status(200).send(bookingDetails);
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async userbookings(@Res() res: Response, @Req() req: Request) {
+    try {
+      const userId = req.body.userId;
+      const booking = await this.bookingModel
+        .find({ userId: userId })
+        .populate('vehicleId');
+      res.status(200).send(booking);
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
