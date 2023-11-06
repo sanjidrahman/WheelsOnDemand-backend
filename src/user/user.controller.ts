@@ -3,10 +3,14 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Put,
+  Query,
   Req,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './user.service';
 import { Signupdto } from './dto/signup.dto';
@@ -14,6 +18,10 @@ import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { ChoiseDto } from './dto/choice.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { editFileName, imageFileFilter } from 'src/file-uploads.utils';
+import { UpdateUserDto } from './dto/edit-user.dto';
 
 @Controller('user')
 export class AuthController {
@@ -57,8 +65,13 @@ export class AuthController {
   }
 
   @Get('vehicles')
-  getVehicles(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
-    return this.authservice.getVehicles(res, req);
+  getVehicles(
+    @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
+    @Query('filter') filter: any,
+  ) {
+    console.log(filter);
+    return this.authservice.getVehicles(res, req, filter);
   }
 
   @Post('book-vehicle')
@@ -77,6 +90,33 @@ export class AuthController {
   @Get('user-booking')
   getUserBooking(@Res() res: Response, @Req() req: Request) {
     return this.authservice.userbookings(res, req);
+  }
+
+  @Patch('update-profile')
+  @UseInterceptors(
+    FileInterceptor('profile', {
+      storage: diskStorage({
+        destination: './files',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+    }),
+  )
+  updateProfile(
+    @Res() res: Response,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+  ) {
+    return this.authservice.updateUserProfile(res, req, file);
+  }
+
+  @Patch('update-user')
+  updateUser(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Body() edituserdto: UpdateUserDto,
+  ) {
+    this.authservice.updateUser(res, req, edituserdto);
   }
 
   @Post('logout')

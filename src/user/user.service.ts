@@ -14,6 +14,7 @@ import { ChoiseDto } from './dto/choice.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { Booking } from './schemas/bookings.schema';
 import * as moment from 'moment';
+import { UpdateUserDto } from './dto/edit-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -161,6 +162,7 @@ export class AuthService {
   async getUser(@Req() req: Request, @Res() res: Response) {
     try {
       const cookie = req.cookies['jwt'];
+      console.log(cookie);
 
       const claims = this.jwtservice.verify(cookie);
 
@@ -200,7 +202,8 @@ export class AuthService {
     }
   }
 
-  async getVehicles(@Res() res: Response, @Req() req: Request) {
+  async getVehicles(@Res() res: Response, @Req() req: Request, filter?: any) {
+    console.log(filter);
     try {
       const userDetails = await this.userModel.findById({
         _id: req.body.userId,
@@ -244,7 +247,7 @@ export class AuthService {
                 ],
               },
             },
-            isVerified: true,
+            $match: {},
           },
         },
       ]);
@@ -331,6 +334,43 @@ export class AuthService {
         .find({ userId: userId })
         .populate('vehicleId');
       res.status(200).send(booking);
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async updateUserProfile(
+    @Res() res: Response,
+    @Req() req: Request,
+    file: any,
+  ) {
+    try {
+      const token = req.cookies['jwt'];
+      const claims = this.jwtservice.verify(token);
+      const update = await this.userModel.findOneAndUpdate(
+        { _id: claims.id },
+        { $set: { profile: file.filename } },
+      );
+      console.log(update);
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async updateUser(
+    @Res() res: Response,
+    @Req() req: Request,
+    updateuserdto: UpdateUserDto,
+  ) {
+    try {
+      const userid = req.body.userId;
+      const { name, phone } = updateuserdto;
+      await this.userModel.findOneAndUpdate(
+        { _id: userid },
+        { $set: { name: name, phone: phone } },
+      );
+      res.status(200).json({ message: 'Success' });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }

@@ -25,6 +25,9 @@ export class User extends Document {
     pickup: string;
     dropoff: string;
   };
+
+  @Prop()
+  profile: string;
 }
 
 export const userSchema = SchemaFactory.createForClass(User);

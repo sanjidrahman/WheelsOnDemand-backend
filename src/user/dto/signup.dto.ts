@@ -1,4 +1,4 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class Signupdto {
   @IsNotEmpty()
@@ -15,4 +15,7 @@ export class Signupdto {
 
   @IsNotEmpty()
   confirmPass: string;
+
+  @IsOptional()
+  profile: string;
 }
