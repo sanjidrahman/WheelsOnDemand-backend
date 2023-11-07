@@ -68,9 +68,8 @@ export class AuthController {
   getVehicles(
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
-    @Query('filter') filter: any,
+    @Query() filter: any,
   ) {
-    console.log(filter);
     return this.authservice.getVehicles(res, req, filter);
   }
 
@@ -117,6 +116,21 @@ export class AuthController {
     @Body() edituserdto: UpdateUserDto,
   ) {
     this.authservice.updateUser(res, req, edituserdto);
+  }
+
+  @Patch('change-password')
+  changePass(@Res() res: Response, @Req() req: Request, @Body() data: any) {
+    return this.authservice.changePass(res, req, data);
+  }
+
+  @Patch('cancel-booking/:b_id')
+  cancelBooking(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Body() reason: any,
+    @Param('b_id') bookId: string,
+  ) {
+    return this.authservice.cancelBooking(res, req, reason.reason, bookId);
   }
 
   @Post('logout')

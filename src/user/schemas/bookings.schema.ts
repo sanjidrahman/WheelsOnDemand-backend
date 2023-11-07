@@ -34,6 +34,9 @@ export class Booking extends Document {
 
   @Prop({ default: 'Booked' })
   status: string;
+
+  @Prop()
+  reason: string;
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);

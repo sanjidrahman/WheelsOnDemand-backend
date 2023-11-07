@@ -192,10 +192,9 @@ export class AuthService {
           { _id: userId },
           { $set: { choices: updateChoice } },
         );
-        res.status(200).json({ message: 'Success' });
+        return res.status(200).json({ message: 'Success' });
       } else {
         this.tempChoice = choisedto;
-        console.log(this.tempChoice);
       }
     } catch (err) {
       return res.status(500).json({ message: 'Internal Servet Error' });
@@ -203,7 +202,6 @@ export class AuthService {
   }
 
   async getVehicles(@Res() res: Response, @Req() req: Request, filter?: any) {
-    console.log(filter);
     try {
       const userDetails = await this.userModel.findById({
         _id: req.body.userId,
@@ -247,37 +245,16 @@ export class AuthService {
                 ],
               },
             },
-            $match: {},
+            isVerified: true,
           },
         },
+        {
+          $match: filter,
+        },
       ]);
-
-      // const vehicles = await this.vehicleModel.aggregate([
-      //   {
-      //     $lookup: {
-      //       from: 'bookings',
-      //       localField: '_id',
-      //       foreignField: 'vehicleId',
-      //       as: 'Booked',
-      //     },
-      //   },
-      //   {
-      //     $match: {
-      //       $not: {
-      //         $elemMatch: {
-      //           $and: [
-      //             { $lte: ['$Booked.startDate', userDetails.choices.startDate] },
-      //             { $gte: ['$Booked.endDate', userDetails.choices.endDate] },
-      //           ],
-      //         },
-      //       },
-      //     },
-      //   },
-      // ]);
-      // console.log(vehicles);
       res.status(200).send({ vehicles });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      return res.status(500).json({ message: 'Internal Error' });
     }
   }
 
@@ -309,7 +286,7 @@ export class AuthService {
         total,
         grandTotal,
       });
-      res.status(200).json({ bookingId: bookingDetails._id });
+      return res.status(200).json({ bookingId: bookingDetails._id });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
@@ -347,11 +324,10 @@ export class AuthService {
     try {
       const token = req.cookies['jwt'];
       const claims = this.jwtservice.verify(token);
-      const update = await this.userModel.findOneAndUpdate(
+      await this.userModel.findOneAndUpdate(
         { _id: claims.id },
         { $set: { profile: file.filename } },
       );
-      console.log(update);
       res.status(200).json({ message: 'Success' });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });
@@ -369,6 +345,54 @@ export class AuthService {
       await this.userModel.findOneAndUpdate(
         { _id: userid },
         { $set: { name: name, phone: phone } },
+      );
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async changePass(@Res() res: Response, @Req() req: Request, data: any) {
+    try {
+      const userid = req.body.userId;
+      const { oldpass, newpass, confirmpass } = data;
+      const userData = await this.userModel.findOne({ _id: userid });
+      const passMatch = await bcrypt.compare(oldpass, userData.password);
+      if (confirmpass !== newpass) {
+        return res
+          .status(403)
+          .json({ message: 'New password and confirm password doent match' });
+      }
+      if (!passMatch) {
+        return res.status(400).json({ message: 'Incorrect old password' });
+      }
+      const samePass = await bcrypt.compare(newpass, userData.password);
+      if (samePass) {
+        return res
+          .status(403)
+          .json({ message: 'New password cannot be same as old password' });
+      }
+      const hashPass = await bcrypt.hash(newpass, 10);
+      await this.userModel.findOneAndUpdate(
+        { _id: userid },
+        { $set: { password: hashPass } },
+      );
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async cancelBooking(
+    @Res() res: Response,
+    @Req() req: Request,
+    reason: string,
+    bookId: string,
+  ) {
+    try {
+      await this.bookingModel.findOneAndUpdate(
+        { _id: bookId },
+        { $set: { status: 'cancelled', reason: reason } },
       );
       res.status(200).json({ message: 'Success' });
     } catch (err) {

@@ -249,11 +249,15 @@ export class HostService {
   async changepass(data: any, @Res() res: Response, @Req() req: Request) {
     try {
       const { oldPass, password, confirmPass } = data;
-      console.log(oldPass, password, confirmPass);
       const cookie = req.cookies['jwtHost'];
       const claims = this.jwtservice.verify(cookie);
       const hostData = await this.hostModel.findOne({ _id: claims.id });
       const passMatch = await bcrypt.compare(oldPass, hostData.password);
+      if (password !== confirmPass) {
+        return res
+          .status(403)
+          .json({ message: 'New password and confirm password doent match' });
+      }
       if (!passMatch) {
         return res.status(400).json({ message: 'Incorrect old password' });
       }
