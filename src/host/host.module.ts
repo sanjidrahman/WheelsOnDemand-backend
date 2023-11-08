@@ -6,12 +6,14 @@ import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { hostSchema } from './schemas/host.schemas';
 import { vehicleSchema } from 'src/admin/schemas/vehicles.schema';
+import { BookingSchema } from 'src/user/schemas/bookings.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: 'Host', schema: hostSchema },
       { name: 'Vehicles', schema: vehicleSchema },
+      { name: 'Booking', schema: BookingSchema },
     ]),
     JwtModule.registerAsync({
       inject: [ConfigService],

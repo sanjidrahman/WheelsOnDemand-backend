@@ -17,6 +17,7 @@ import { Vehicles } from 'src/admin/schemas/vehicles.schema';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import * as fs from 'fs';
 import { log } from 'console';
+import { Booking } from 'src/user/schemas/bookings.schema';
 
 @Injectable()
 export class HostService {
@@ -27,6 +28,8 @@ export class HostService {
     private hostModel: Model<Host>,
     @InjectModel('Vehicles')
     private vehicleModel: Model<Vehicles>,
+    @InjectModel('Booking')
+    private bookingModel: Model<Booking>,
     private mailServive: MailerService,
     private jwtservice: JwtService,
   ) {}
@@ -407,6 +410,50 @@ export class HostService {
   async deleteVehicle(@Res() res: Response, id: string) {
     try {
       await this.vehicleModel.findOneAndDelete({ _id: id });
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async hostBooking(@Res() res: Response, @Req() req: Request) {
+    try {
+      const hostid = req.body.userId;
+      const vehicles: any = await this.bookingModel.aggregate([
+        {
+          $lookup: {
+            from: 'vehicles',
+            localField: 'vehicleId',
+            foreignField: '_id',
+            as: 'BookingsOfVehicles',
+          },
+        },
+        {
+          $unwind: {
+            path: '$BookingsOfVehicles',
+          },
+        },
+        {
+          $sort: {
+            'BookingsOfVehicles._id': -1,
+          },
+        },
+      ]);
+      const filtered = vehicles.filter(
+        (e: any) => e.BookingsOfVehicles.createdBy == hostid,
+      );
+      res.status(200).send(filtered);
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async editBookingStatus(@Res() res: Response, b_id: string, status: string) {
+    try {
+      await this.bookingModel.findOneAndUpdate(
+        { _id: b_id },
+        { $set: { status: status } },
+      );
       res.status(200).json({ message: 'Success' });
     } catch (err) {
       res.status(500).json({ message: 'Internal Error' });

@@ -177,6 +177,20 @@ export class HostController {
     return this.hostService.deleteVehicle(res, id);
   }
 
+  @Get('host-bookings')
+  getHostBooking(@Res() res: Response, @Req() req: Request) {
+    return this.hostService.hostBooking(res, req);
+  }
+
+  @Patch('edit-booking-status/:id')
+  editBookingStatus(
+    @Res() res: Response,
+    @Param('id') b_id: string,
+    @Body('status') status: string,
+  ) {
+    this.hostService.editBookingStatus(res, b_id, status);
+  }
+
   @Post('logout')
   logoutUser(@Req() req: Request, @Res() res: Response) {
     return this.hostService.logout(req, res);

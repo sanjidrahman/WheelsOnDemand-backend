@@ -4,6 +4,7 @@ export const exclude = [
   '/user/auth/login',
   '/host/signup',
   '/host/login',
+  '/host/auth/login',
   '/host/verify-otp',
   '/admin/login',
   '/admin/getFile/:filename',
