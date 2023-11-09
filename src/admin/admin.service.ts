@@ -311,8 +311,8 @@ export class AdminService {
 
   async getAllVehicles(@Res() res: Response, page: number) {
     try {
-      const perPage = 6;
-      const currPage = perPage * Number(page - 1);
+      const perPage = 3;
+      const currPage = Number(page) || 1;
       const skip = perPage * (currPage - 1);
       const vehicles = await this.vehicleModel
         .find({})

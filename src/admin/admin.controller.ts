@@ -93,7 +93,7 @@ export class AdminController {
 
   @Get('vehicles')
   allVehicles(@Res() res: Response, @Query('page') page?: number) {
-    // console.log(page, 'PAGE');
+    console.log(page, 'PAGE');
     return this.adminService.getAllVehicles(res, page);
   }
 
