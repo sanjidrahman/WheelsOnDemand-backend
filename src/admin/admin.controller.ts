@@ -93,7 +93,6 @@ export class AdminController {
 
   @Get('vehicles')
   allVehicles(@Res() res: Response, @Query('page') page?: number) {
-    console.log(page, 'PAGE');
     return this.adminService.getAllVehicles(res, page);
   }
 
@@ -195,6 +194,11 @@ export class AdminController {
       filename: file.filename,
     };
     return response;
+  }
+
+  @Get('all-bookings')
+  getBooking(@Res() res: Response) {
+    return this.adminService.getAllBookings(res);
   }
 
   @Post('logout')

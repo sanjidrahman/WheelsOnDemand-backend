@@ -162,15 +162,13 @@ export class AuthService {
   async getUser(@Req() req: Request, @Res() res: Response) {
     try {
       const cookie = req.cookies['jwt'];
-      console.log(cookie);
-
       const claims = this.jwtservice.verify(cookie);
 
       const user = this.userModel.findById({ _id: claims.id });
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...data } = (await user).toJSON();
 
-      res.send(data);
+      res.status(200).send(data);
     } catch (err) {
       throw new Error('Failed to get user');
     }
@@ -309,7 +307,8 @@ export class AuthService {
       const userId = req.body.userId;
       const booking = await this.bookingModel
         .find({ userId: userId })
-        .populate('vehicleId');
+        .populate('vehicleId')
+        .sort({ _id: -1 });
       res.status(200).send(booking);
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });

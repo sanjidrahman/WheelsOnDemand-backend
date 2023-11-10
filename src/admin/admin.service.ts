@@ -13,6 +13,7 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { Vehicles } from './schemas/vehicles.schema';
 import { UpdateVehicleDto } from './dto/edit-vehicle.dto';
 import * as fs from 'fs';
+import { Booking } from 'src/user/schemas/bookings.schema';
 
 @Injectable()
 export class AdminService {
@@ -25,6 +26,8 @@ export class AdminService {
     private hostModel: Model<Host>,
     @InjectModel('Vehicles')
     private vehicleModel: Model<Vehicles>,
+    @InjectModel('Booking')
+    private bookingModel: Model<Booking>,
     private jwtservice: JwtService,
     private mailService: MailerService,
   ) {}
@@ -479,6 +482,24 @@ export class AdminService {
       res.status(200).json({ message: 'Success' });
     } catch (err) {
       res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
+  async getAllBookings(@Res() res: Response) {
+    try {
+      const bookings = await this.bookingModel
+        .find({})
+        .populate({
+          path: 'vehicleId',
+          populate: {
+            path: 'createdBy',
+            model: 'Host',
+          },
+        })
+        .sort({ _id: -1 });
+      res.status(200).json({ bookings });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Server Error' });
     }
   }
 

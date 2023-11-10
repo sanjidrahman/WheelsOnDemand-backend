@@ -163,6 +163,11 @@ export class HostController {
     return this.hostService.editVehicle(files, editVehicle, res, id);
   }
 
+  @Get('vehicle-details/:id')
+  vehicleDetails(@Res() res: Response, @Param('id') v_id: string) {
+    this.hostService.getVehicleDetails(res, v_id);
+  }
+
   @Patch('delete-image/:id')
   deleteimg(
     @Res() res: Response,

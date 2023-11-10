@@ -8,6 +8,7 @@ import { adminSchema } from './schemas/admin.schema';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { vehicleSchema } from './schemas/vehicles.schema';
+import { BookingSchema } from 'src/user/schemas/bookings.schema';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { vehicleSchema } from './schemas/vehicles.schema';
       { name: 'Admin', schema: adminSchema },
       { name: 'Host', schema: hostSchema },
       { name: 'Vehicles', schema: vehicleSchema },
+      { name: 'Booking', schema: BookingSchema },
     ]),
     JwtModule.registerAsync({
       inject: [ConfigService],

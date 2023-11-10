@@ -407,6 +407,17 @@ export class HostService {
     }
   }
 
+  async getVehicleDetails(@Res() res: Response, v_id: string) {
+    try {
+      const vehicleDetails = await this.vehicleModel
+        .findOne({ _id: v_id })
+        .populate('createdBy');
+      res.status(200).send(vehicleDetails);
+    } catch (err) {
+      res.status(500).json({ message: 'Internal Error' });
+    }
+  }
+
   async deleteVehicle(@Res() res: Response, id: string) {
     try {
       await this.vehicleModel.findOneAndDelete({ _id: id });
