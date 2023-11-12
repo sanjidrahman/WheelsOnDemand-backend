@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './user.controller';
-import { AuthService } from './user.service';
+import { UserService } from './user.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { userSchema } from './schemas/user.schema';
 import { PassportModule } from '@nestjs/passport';
@@ -34,7 +34,7 @@ import moment from 'moment';
   ],
   controllers: [AuthController],
   providers: [
-    AuthService,
+    UserService,
     {
       provide: 'MomentWrapper',
       useValue: moment,

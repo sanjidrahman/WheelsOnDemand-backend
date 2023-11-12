@@ -12,7 +12,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { AuthService } from './user.service';
+import { UserService } from './user.service';
 import { Signupdto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
@@ -25,34 +25,34 @@ import { UpdateUserDto } from './dto/edit-user.dto';
 
 @Controller('user')
 export class AuthController {
-  constructor(private authservice: AuthService) {}
+  constructor(private userservice: UserService) {}
 
   @Post('signup')
   signup(
     @Body() signupdto: Signupdto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authservice.signup(signupdto, res);
+    return this.userservice.signup(signupdto, res);
   }
 
   @Post('login')
   login(@Body() logindto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    return this.authservice.login(logindto, res);
+    return this.userservice.login(logindto, res);
   }
 
   @Post('auth/login')
   googlelogin(@Body() user: any, @Res({ passthrough: true }) res: Response) {
-    return this.authservice.googleReg(user, res);
+    return this.userservice.googleReg(user, res);
   }
 
   @Get('getuser')
   getUser(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    return this.authservice.getUser(req, res);
+    return this.userservice.getUser(req, res);
   }
 
   @Post('verify-otp')
   verify(@Res({ passthrough: true }) res: Response, @Body() otp: any) {
-    return this.authservice.verifyOtp(res, otp);
+    return this.userservice.verifyOtp(res, otp);
   }
 
   @Put('store-choice')
@@ -61,7 +61,7 @@ export class AuthController {
     @Body() choicedto: ChoiseDto,
   ) {
     console.log(choicedto);
-    return this.authservice.storeChoices(res, choicedto);
+    return this.userservice.storeChoices(res, choicedto);
   }
 
   @Get('vehicles')
@@ -70,7 +70,7 @@ export class AuthController {
     @Req() req: Request,
     @Query() filter: any,
   ) {
-    return this.authservice.getVehicles(res, req, filter);
+    return this.userservice.getVehicles(res, req, filter);
   }
 
   @Post('book-vehicle')
@@ -78,17 +78,17 @@ export class AuthController {
     @Body() createbookingdto: CreateBookingDto,
     @Res() res: Response,
   ) {
-    return this.authservice.booking(createbookingdto, res);
+    return this.userservice.booking(createbookingdto, res);
   }
 
   @Get('booking-details/:id')
   getBookingDetails(@Res() res: Response, @Param('id') bookingid: string) {
-    return this.authservice.getBooking(res, bookingid);
+    return this.userservice.getBooking(res, bookingid);
   }
 
   @Get('user-booking')
   getUserBooking(@Res() res: Response, @Req() req: Request) {
-    return this.authservice.userbookings(res, req);
+    return this.userservice.userbookings(res, req);
   }
 
   @Patch('update-profile')
@@ -106,7 +106,7 @@ export class AuthController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req: Request,
   ) {
-    return this.authservice.updateUserProfile(res, req, file);
+    return this.userservice.updateUserProfile(res, req, file);
   }
 
   @Patch('update-user')
@@ -115,12 +115,12 @@ export class AuthController {
     @Req() req: Request,
     @Body() edituserdto: UpdateUserDto,
   ) {
-    this.authservice.updateUser(res, req, edituserdto);
+    this.userservice.updateUser(res, req, edituserdto);
   }
 
   @Patch('change-password')
   changePass(@Res() res: Response, @Req() req: Request, @Body() data: any) {
-    return this.authservice.changePass(res, req, data);
+    return this.userservice.changePass(res, req, data);
   }
 
   @Patch('cancel-booking/:b_id')
@@ -130,11 +130,21 @@ export class AuthController {
     @Body() reason: any,
     @Param('b_id') bookId: string,
   ) {
-    return this.authservice.cancelBooking(res, req, reason.reason, bookId);
+    return this.userservice.cancelBooking(res, req, reason.reason, bookId);
+  }
+
+  @Post('add-review/:v_id')
+  addReview(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Param('v_id') v_id: string,
+    @Body('review') review: string,
+  ) {
+    return this.userservice.postReview(res, req, v_id, review);
   }
 
   @Post('logout')
   logoutUser(@Req() req: Request, @Res() res: Response) {
-    return this.authservice.logout(req, res);
+    return this.userservice.logout(req, res);
   }
 }

@@ -17,7 +17,7 @@ import * as moment from 'moment';
 import { UpdateUserDto } from './dto/edit-user.dto';
 
 @Injectable()
-export class AuthService {
+export class UserService {
   tempUser: any;
   tempChoice: any;
   otpgenetated: any;
@@ -394,6 +394,35 @@ export class AuthService {
         { $set: { status: 'cancelled', reason: reason } },
       );
       res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async postReview(
+    @Res() res: Response,
+    @Req() req: Request,
+    vid: string,
+    review: string,
+  ) {
+    try {
+      const userid = req.body.userId;
+      console.log(vid);
+      console.log(userid, 'ID');
+      console.log(review, 'SERVICE');
+      const newReview = {
+        userId: userid,
+        review: review,
+      };
+      console.log(newReview);
+      const u = await this.vehicleModel
+        .findOneAndUpdate(
+          { _id: vid },
+          { $push: { review: { userId: userid, review } } },
+          { new: true },
+        )
+        .exec();
+      return res.json(u);
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
