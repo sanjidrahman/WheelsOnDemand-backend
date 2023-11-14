@@ -411,7 +411,14 @@ export class HostService {
     try {
       const vehicleDetails = await this.vehicleModel
         .findOne({ _id: v_id })
-        .populate('createdBy');
+        .populate('createdBy')
+        .populate({
+          path: 'review',
+          populate: {
+            path: 'userId',
+            model: 'User',
+          },
+        });
       res.status(200).send(vehicleDetails);
     } catch (err) {
       res.status(500).json({ message: 'Internal Error' });

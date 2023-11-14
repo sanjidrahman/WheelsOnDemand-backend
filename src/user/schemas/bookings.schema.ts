@@ -37,6 +37,9 @@ export class Booking extends Document {
 
   @Prop()
   reason: string;
+
+  @Prop()
+  paymentMethod: string;
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);

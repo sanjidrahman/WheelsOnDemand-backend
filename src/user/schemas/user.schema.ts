@@ -28,6 +28,9 @@ export class User extends Document {
 
   @Prop()
   profile: string;
+
+  @Prop()
+  wallet: number;
 }
 
 export const userSchema = SchemaFactory.createForClass(User);

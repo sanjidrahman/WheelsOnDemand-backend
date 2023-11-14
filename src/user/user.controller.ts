@@ -127,10 +127,17 @@ export class AuthController {
   cancelBooking(
     @Res() res: Response,
     @Req() req: Request,
-    @Body() reason: any,
+    @Body('reason') reason: any,
+    @Body('amount') refund: number,
     @Param('b_id') bookId: string,
   ) {
-    return this.userservice.cancelBooking(res, req, reason.reason, bookId);
+    return this.userservice.cancelBooking(
+      res,
+      req,
+      reason.reason,
+      refund,
+      bookId,
+    );
   }
 
   @Post('add-review/:v_id')
@@ -141,6 +148,30 @@ export class AuthController {
     @Body('review') review: string,
   ) {
     return this.userservice.postReview(res, req, v_id, review);
+  }
+
+  @Patch('delete-review/:v_id')
+  deleteReview(
+    @Res() res: Response,
+    @Param('v_id') vid: string,
+    @Body('r_id') rid: string,
+  ) {
+    return this.userservice.deleteReview(res, vid, rid);
+  }
+
+  @Post('forgot-password')
+  forgotpass(@Res() res: Response, @Body('email') email: string) {
+    return this.userservice.forgotpassword(res, email);
+  }
+
+  @Patch('reset-password/:u_id')
+  resetPassword(
+    @Res() res: Response,
+    @Param('u_id') userId: string,
+    @Body('newpass') newpassword: string,
+    @Body('confirmpass') confirmpass: string,
+  ) {
+    return this.userservice.resetPass(res, userId, newpassword, confirmpass);
   }
 
   @Post('logout')

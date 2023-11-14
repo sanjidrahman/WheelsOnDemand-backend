@@ -1,5 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
-import { Injectable, Req, Res } from '@nestjs/common';
+import { HttpStatus, Injectable, Req, Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
@@ -23,13 +23,13 @@ export class UserService {
   otpgenetated: any;
   constructor(
     @InjectModel(User.name)
-    private userModel: Model<User>,
+    private _userModel: Model<User>,
     @InjectModel('Vehicle')
-    private vehicleModel: Model<Vehicles>,
+    private _vehicleModel: Model<Vehicles>,
     @InjectModel('Booking')
-    private bookingModel: Model<Booking>,
-    private jwtservice: JwtService,
-    private mailer: MailerService,
+    private _bookingModel: Model<Booking>,
+    private _jwtservice: JwtService,
+    private _mailer: MailerService,
   ) {}
 
   async signup(
@@ -39,7 +39,7 @@ export class UserService {
     try {
       const { name, email, phone, password, confirmPass } = signupdto;
 
-      const existmail = await this.userModel.findOne({ email: email });
+      const existmail = await this._userModel.findOne({ email: email });
 
       if (existmail) {
         return res.status(400).send({ message: 'Email already exists' });
@@ -78,10 +78,10 @@ export class UserService {
     try {
       const otpb = otp.otp;
       if (this.otpgenetated == otpb) {
-        const user = await this.userModel.create(this.tempUser);
+        const user = await this._userModel.create(this.tempUser);
         if (user) {
           const payload = { id: user._id, role: 'user' };
-          const token = this.jwtservice.sign(payload);
+          const token = this._jwtservice.sign(payload);
           res.cookie('jwt', token, {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000,
@@ -99,7 +99,7 @@ export class UserService {
   }
 
   async sendVerificationEmail(email: string, otp: string) {
-    return this.mailer.sendMail({
+    return this._mailer.sendMail({
       to: email,
       from: process.env.DEV_MAIL,
       subject: 'WheelsOnDemand Email Verification',
@@ -112,7 +112,7 @@ export class UserService {
   async login(logindto: LoginDto, @Res({ passthrough: true }) res: Response) {
     try {
       const { email, password } = logindto;
-      const user = await this.userModel.findOne({ email: email });
+      const user = await this._userModel.findOne({ email: email });
 
       if (!user) {
         // throw new UnauthorizedException('User not found');
@@ -126,7 +126,7 @@ export class UserService {
       }
 
       const payload = { id: user._id, role: 'user' };
-      const token = this.jwtservice.sign(payload);
+      const token = this._jwtservice.sign(payload);
       res.cookie('jwt', token, {
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
@@ -140,14 +140,14 @@ export class UserService {
   async googleReg(user: any, @Res() res: Response) {
     try {
       const email = user.email;
-      const userData = await this.userModel.findOne({ email });
+      const userData = await this._userModel.findOne({ email });
 
       if (!userData) {
         res
           .status(404)
           .json({ message: 'Account not found , Please Register' });
       } else {
-        const token = this.jwtservice.sign({ id: userData._id, role: 'user' });
+        const token = this._jwtservice.sign({ id: userData._id, role: 'user' });
         res.cookie('jwt', token, {
           httpOnly: true,
           maxAge: 24 * 60 * 60 * 1000,
@@ -162,9 +162,9 @@ export class UserService {
   async getUser(@Req() req: Request, @Res() res: Response) {
     try {
       const cookie = req.cookies['jwt'];
-      const claims = this.jwtservice.verify(cookie);
+      const claims = this._jwtservice.verify(cookie);
 
-      const user = this.userModel.findById({ _id: claims.id });
+      const user = this._userModel.findById({ _id: claims.id });
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...data } = (await user).toJSON();
 
@@ -186,7 +186,7 @@ export class UserService {
           pickup,
           dropoff,
         };
-        await this.userModel.findOneAndUpdate(
+        await this._userModel.findOneAndUpdate(
           { _id: userId },
           { $set: { choices: updateChoice } },
         );
@@ -201,10 +201,10 @@ export class UserService {
 
   async getVehicles(@Res() res: Response, @Req() req: Request, filter?: any) {
     try {
-      const userDetails = await this.userModel.findById({
+      const userDetails = await this._userModel.findById({
         _id: req.body.userId,
       });
-      const vehicles = await this.vehicleModel.aggregate([
+      const vehicles = await this._vehicleModel.aggregate([
         {
           $lookup: {
             from: 'bookings',
@@ -269,11 +269,11 @@ export class UserService {
         total,
         grandTotal,
       } = createbookingdto;
-      await this.userModel.findOneAndUpdate(
+      await this._userModel.findOneAndUpdate(
         { _id: userId },
         { $unset: { choices: 1 } },
       );
-      const bookingDetails = await this.bookingModel.create({
+      const bookingDetails = await this._bookingModel.create({
         userId,
         vehicleId,
         razorId: razorId.razorpay_payment_id,
@@ -292,7 +292,7 @@ export class UserService {
 
   async getBooking(@Res() res: Response, bookingid: string) {
     try {
-      const bookingDetails = await this.bookingModel
+      const bookingDetails = await this._bookingModel
         .find({ _id: bookingid })
         .populate('userId')
         .populate('vehicleId');
@@ -305,7 +305,7 @@ export class UserService {
   async userbookings(@Res() res: Response, @Req() req: Request) {
     try {
       const userId = req.body.userId;
-      const booking = await this.bookingModel
+      const booking = await this._bookingModel
         .find({ userId: userId })
         .populate('vehicleId')
         .sort({ _id: -1 });
@@ -322,8 +322,8 @@ export class UserService {
   ) {
     try {
       const token = req.cookies['jwt'];
-      const claims = this.jwtservice.verify(token);
-      await this.userModel.findOneAndUpdate(
+      const claims = this._jwtservice.verify(token);
+      await this._userModel.findOneAndUpdate(
         { _id: claims.id },
         { $set: { profile: file.filename } },
       );
@@ -341,7 +341,7 @@ export class UserService {
     try {
       const userid = req.body.userId;
       const { name, phone } = updateuserdto;
-      await this.userModel.findOneAndUpdate(
+      await this._userModel.findOneAndUpdate(
         { _id: userid },
         { $set: { name: name, phone: phone } },
       );
@@ -355,7 +355,7 @@ export class UserService {
     try {
       const userid = req.body.userId;
       const { oldpass, newpass, confirmpass } = data;
-      const userData = await this.userModel.findOne({ _id: userid });
+      const userData = await this._userModel.findOne({ _id: userid });
       const passMatch = await bcrypt.compare(oldpass, userData.password);
       if (confirmpass !== newpass) {
         return res
@@ -372,7 +372,7 @@ export class UserService {
           .json({ message: 'New password cannot be same as old password' });
       }
       const hashPass = await bcrypt.hash(newpass, 10);
-      await this.userModel.findOneAndUpdate(
+      await this._userModel.findOneAndUpdate(
         { _id: userid },
         { $set: { password: hashPass } },
       );
@@ -386,12 +386,18 @@ export class UserService {
     @Res() res: Response,
     @Req() req: Request,
     reason: string,
+    refund: number,
     bookId: string,
   ) {
     try {
-      await this.bookingModel.findOneAndUpdate(
+      const userid = req.body.userId;
+      await this._bookingModel.findOneAndUpdate(
         { _id: bookId },
         { $set: { status: 'cancelled', reason: reason } },
+      );
+      await this._userModel.findOneAndUpdate(
+        { _id: userid },
+        { $inc: { wallet: refund } },
       );
       res.status(200).json({ message: 'Success' });
     } catch (err) {
@@ -407,24 +413,91 @@ export class UserService {
   ) {
     try {
       const userid = req.body.userId;
-      console.log(vid);
-      console.log(userid, 'ID');
-      console.log(review, 'SERVICE');
-      const newReview = {
-        userId: userid,
-        review: review,
-      };
-      console.log(newReview);
-      const u = await this.vehicleModel
+      const u = await this._vehicleModel
         .findOneAndUpdate(
           { _id: vid },
           { $push: { review: { userId: userid, review } } },
           { new: true },
         )
         .exec();
-      return res.json(u);
+      return res.status(201).json({ message: 'updated', u });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async deleteReview(@Res() res: Response, vid: string, rid: string) {
+    try {
+      await this._vehicleModel.findOneAndUpdate(
+        { _id: vid },
+        { $pull: { review: { _id: rid } } },
+      );
+      res.status(200).json({ message: 'Success' });
+    } catch (err) {
+      console.log(err.message);
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async forgotpassword(@Res() res: Response, email: string) {
+    try {
+      const existEmail = await this._userModel.findOne({ email: email });
+      if (!existEmail)
+        res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Email not found. Please provide correct email' });
+
+      await this.sendForgotPassMail(res, existEmail.email, existEmail._id);
+      res.status(HttpStatus.OK).json({ message: 'Success' });
+    } catch (err) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async sendForgotPassMail(@Res() res: Response, email: string, id: string) {
+    try {
+      return this._mailer.sendMail({
+        to: email,
+        from: process.env.DEV_MAIL,
+        subject: 'WheelsOnDemand Forgot Password',
+        html: `
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background-color: #f4f4f4; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+              <h2 style="color: #333333;">Forgot Your Password?</h2>
+              <p style="color: #666666;">No worries! It happens to the best of us. Click the link below to reset your password:</p>
+              <p>
+                  <a href="http://localhost:4200/reset-password/${id}" style="display: inline-block; padding: 10px 20px; font-size: 16px; text-decoration: none; background-color: #007BFF; color: #ffffff; border-radius: 5px;">Reset Password</a>
+              </p>
+              <p>If you didn't request a password reset, please ignore this email.</p>
+              <p>Thanks,<br>Your WheelsOnDemand Team</p>
+          </div>
+      `,
+      });
+    } catch (err) {
+      console.log(err.message);
+      return res.status(500).json({ message: err.message });
+    }
+  }
+
+  async resetPass(
+    @Res() res: Response,
+    userId: string,
+    newpassword: string,
+    confirmpassword: string,
+  ) {
+    try {
+      if (newpassword !== confirmpassword) {
+        return res
+          .status(HttpStatus.NOT_ACCEPTABLE)
+          .json({ message: 'Confirm password and new password are not same' });
+      }
+      const hashpass = await bcrypt.hash(newpassword, 10);
+      await this._userModel.findOneAndUpdate(
+        { _id: userId },
+        { $set: { password: hashpass } },
+      );
+      res.status(HttpStatus.OK).json({ message: 'Success' });
+    } catch (err) {
+      return res.status(500).json({ message: err.message });
     }
   }
 
