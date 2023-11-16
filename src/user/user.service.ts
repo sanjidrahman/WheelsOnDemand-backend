@@ -204,6 +204,7 @@ export class UserService {
       const userDetails = await this._userModel.findById({
         _id: req.body.userId,
       });
+      // filter.location = new RegExp(userDetails.choices.pickup, 'i');
       const vehicles = await this._vehicleModel.aggregate([
         {
           $lookup: {
@@ -250,6 +251,7 @@ export class UserService {
           $match: filter,
         },
       ]);
+      // console.log(vehicles);
       res.status(200).send({ vehicles });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Error' });
@@ -258,6 +260,7 @@ export class UserService {
 
   async booking(createbookingdto: CreateBookingDto, @Res() res: Response) {
     try {
+      let bookingDetails;
       const {
         userId,
         vehicleId,
@@ -268,24 +271,56 @@ export class UserService {
         endDate,
         total,
         grandTotal,
+        paymentMethod,
       } = createbookingdto;
+      if (paymentMethod == 'wallet') {
+        console.log(total);
+        await this._userModel.findOneAndUpdate(
+          { _id: userId },
+          { $inc: { wallet: -total } },
+        );
+      } else if (paymentMethod == 'razor n wallet') {
+        console.log(total, grandTotal);
+        const remain = total - grandTotal;
+        await this._userModel.findOneAndUpdate(
+          { _id: userId },
+          { $inc: { wallet: -remain } },
+        );
+      }
       await this._userModel.findOneAndUpdate(
         { _id: userId },
         { $unset: { choices: 1 } },
       );
-      const bookingDetails = await this._bookingModel.create({
-        userId,
-        vehicleId,
-        razorId: razorId.razorpay_payment_id,
-        pickup,
-        dropoff,
-        startDate,
-        endDate,
-        total,
-        grandTotal,
-      });
+      if (razorId) {
+        bookingDetails = await this._bookingModel.create({
+          userId,
+          vehicleId,
+          razorId: razorId.razorpay_payment_id,
+          pickup,
+          dropoff,
+          startDate,
+          endDate,
+          total,
+          grandTotal,
+          paymentMethod,
+        });
+      } else {
+        bookingDetails = await this._bookingModel.create({
+          userId,
+          vehicleId,
+          pickup,
+          dropoff,
+          startDate,
+          endDate,
+          total,
+          grandTotal,
+          paymentMethod,
+        });
+      }
+
       return res.status(200).json({ bookingId: bookingDetails._id });
     } catch (err) {
+      console.log(err.message);
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
@@ -296,7 +331,7 @@ export class UserService {
         .find({ _id: bookingid })
         .populate('userId')
         .populate('vehicleId');
-      return res.status(200).send(bookingDetails);
+      return res.status(200).json(bookingDetails);
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
