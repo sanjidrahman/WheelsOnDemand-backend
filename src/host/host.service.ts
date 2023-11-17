@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Host } from './schemas/host.schemas';
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, Req, Res } from '@nestjs/common';
+import { HttpStatus, Injectable, Req, Res } from '@nestjs/common';
 import { CreateHostDto } from './dto/create-host.dto';
 import { UpdateHostDto } from './dto/update-host.dto';
 import { Request, Response } from 'express';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as otpgenerater from 'otp-generator';
@@ -16,7 +16,6 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { Vehicles } from 'src/admin/schemas/vehicles.schema';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import * as fs from 'fs';
-import { log } from 'console';
 import { Booking } from 'src/user/schemas/bookings.schema';
 
 @Injectable()
@@ -73,7 +72,9 @@ export class HostService {
 
       res.status(200).json({ message: 'Success' });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Error' });
     }
   }
 
@@ -93,7 +94,9 @@ export class HostService {
         }
       }
     } catch (err) {
-      res.status(500).json({ message: 'Internal server error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal server error' });
     }
   }
 
@@ -167,16 +170,165 @@ export class HostService {
         return res.status(404).json({ message: 'Host not found' });
       }
     } catch (err) {
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
     }
   }
 
-  async getAll(@Res() res: Response) {
+  async dashboard(@Res() res: Response, @Req() req: Request) {
+    try {
+      const cookie = req.cookies['jwtHost'];
+      const claims = this.jwtservice.verify(cookie);
+      const hostRevenue = await this.bookingModel.aggregate([
+        {
+          $lookup: {
+            from: 'vehicles',
+            localField: 'vehicleId',
+            foreignField: '_id',
+            as: 'vehicleDetails',
+          },
+        },
+        {
+          $unwind: '$vehicleDetails',
+        },
+        {
+          $match: {
+            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(claims.id),
+            // status: 'completed',
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$total' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            totalRevenue: {
+              $floor: {
+                $subtract: [
+                  '$totalRevenue',
+                  { $multiply: ['$totalRevenue', 0.2] },
+                ],
+              },
+            },
+          },
+        },
+      ]);
+      const mostOrderedVehicle = await this.bookingModel.aggregate([
+        {
+          $lookup: {
+            from: 'vehicles',
+            localField: 'vehicleId',
+            foreignField: '_id',
+            as: 'vehicleDetails',
+          },
+        },
+        {
+          $unwind: '$vehicleDetails',
+        },
+        {
+          $match: {
+            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(claims.id),
+            // status: 'completed',
+          },
+        },
+        {
+          $group: {
+            _id: '$vehicleDetails._id',
+            vehicle: { $first: '$vehicleDetails' },
+            orderCount: { $sum: 1 },
+          },
+        },
+        {
+          $sort: { orderCount: -1, 'vehicle.createdAt': -1 },
+        },
+        {
+          $limit: 1,
+        },
+        {
+          $project: {
+            _id: 0,
+            vehicle: 1,
+          },
+        },
+      ]);
+
+      const bookedCount = await this.bookingModel
+        .find({ status: 'Booked' })
+        .countDocuments();
+
+      const completedCount = await this.bookingModel
+        .find({ status: 'completed' })
+        .countDocuments();
+
+      const cancelledBooking = await this.bookingModel
+        .find({ status: 'cancelled' })
+        .countDocuments();
+
+      const latestOrders = await this.bookingModel.aggregate([
+        {
+          $lookup: {
+            from: 'vehicles',
+            localField: 'vehicleId',
+            foreignField: '_id',
+            as: 'vehicleDetails',
+          },
+        },
+        {
+          $unwind: '$vehicleDetails',
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userDetails',
+          },
+        },
+        {
+          $unwind: '$userDetails',
+        },
+        {
+          $match: {
+            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(claims.id),
+            // status: 'completed',
+          },
+        },
+        {
+          $sort: { createdAt: -1 },
+        },
+        {
+          $limit: 5,
+        },
+      ]);
+
+      res.status(HttpStatus.OK).json({
+        hostRevenue: hostRevenue[0].totalRevenue || null,
+        trending: mostOrderedVehicle[0].vehicle || null,
+        bookedCount,
+        completedCount,
+        cancelledBooking,
+        latestOrders,
+      });
+    } catch (err) {
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async getAllHost(@Res() res: Response) {
     try {
       const hosts = await this.hostModel.find({});
       return { hosts };
     } catch (err) {
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
     }
   }
 
@@ -225,7 +377,9 @@ export class HostService {
       const host = await this.hostModel.findById({ _id: claims.id });
       res.send(host);
     } catch (err) {
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
     }
   }
 
@@ -245,7 +399,9 @@ export class HostService {
       console.log(updatehostdto);
       return res.status(200).json({ message: 'Success' });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
     }
   }
 
@@ -277,7 +433,9 @@ export class HostService {
       );
       return res.status(200).json({ message: 'Success' });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
     }
   }
 
@@ -317,7 +475,9 @@ export class HostService {
       }
       return res.status(200).json({ message: 'Success' });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
     }
   }
 
@@ -331,7 +491,9 @@ export class HostService {
       }
       return;
     } catch (err) {
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
     }
   }
 
@@ -343,7 +505,9 @@ export class HostService {
       );
       return;
     } catch (err) {
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
     }
   }
 
@@ -357,7 +521,9 @@ export class HostService {
       });
       res.send(vehicle);
     } catch (err) {
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
     }
   }
 
@@ -377,7 +543,9 @@ export class HostService {
       await this.uploadVehicleImage(files, res, id);
       res.status(200).json({ message: 'Success' });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Error' });
     }
   }
 
@@ -403,7 +571,9 @@ export class HostService {
       }
       res.status(200).json({ message: 'Succuss' });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Error' });
     }
   }
 
@@ -421,7 +591,9 @@ export class HostService {
         });
       res.status(200).send(vehicleDetails);
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Error' });
     }
   }
 
@@ -430,7 +602,9 @@ export class HostService {
       await this.vehicleModel.findOneAndDelete({ _id: id });
       res.status(200).json({ message: 'Success' });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Error' });
     }
   }
 
@@ -462,7 +636,9 @@ export class HostService {
       );
       res.status(200).send(filtered);
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Error' });
     }
   }
 
@@ -474,7 +650,9 @@ export class HostService {
       );
       res.status(200).json({ message: 'Success' });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Error' });
     }
   }
 
@@ -483,7 +661,9 @@ export class HostService {
       res.cookie('jwtHost', '', { maxAge: 0 });
       res.status(200).json({ message: 'Logged out succesfully' });
     } catch (err) {
-      res.status(500).json({ message: 'Internal Error' });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Error' });
     }
   }
 }

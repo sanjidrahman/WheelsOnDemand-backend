@@ -1,4 +1,10 @@
-import { Injectable, Req, Res, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  Req,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { User } from 'src/user/schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -81,6 +87,167 @@ export class AdminService {
   //     res.status(500).json({ message: 'Internal Error' });
   //   }
   // }
+
+  async dashboard(@Res() res: Response) {
+    try {
+      const amountGeneratedEachMonth: number[] = [];
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const monlyAmount = await this.bookingModel.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: new Date(currentYear, 0, 1),
+              $lt: currentDate,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: { month: { $month: '$createdAt' } },
+            totalSales: { $sum: '$total' },
+          },
+        },
+        {
+          $sort: { '_id.month': 1 },
+        },
+        {
+          $group: {
+            _id: null,
+            monthlySales: {
+              $push: {
+                month: '$_id.month',
+                totalSales: '$totalSales',
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            monthlySales: 1,
+          },
+        },
+      ]);
+      monlyAmount.forEach((val) => {
+        val.monthlySales.forEach((val) => {
+          for (let i = 1; i <= 12; i++) {
+            if (val.month == i) {
+              amountGeneratedEachMonth.push(val.totalSales);
+            } else {
+              amountGeneratedEachMonth.push(0);
+            }
+          }
+        });
+      });
+      const totalAmount = await this.bookingModel.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalAmount: { $sum: '$grandTotal' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            totalAmount: 1,
+          },
+        },
+      ]);
+      const hostGenerated = await this.bookingModel.aggregate([
+        {
+          $lookup: {
+            from: 'vehicles',
+            localField: 'vehicleId',
+            foreignField: '_id',
+            as: 'VehicleDetails',
+          },
+        },
+        {
+          $unwind: '$VehicleDetails',
+        },
+        {
+          $lookup: {
+            from: 'hosts',
+            localField: 'VehicleDetails.createdBy',
+            foreignField: '_id',
+            as: 'HostDetails',
+          },
+        },
+        {
+          $match: {
+            HostDetails: { $ne: [] },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$grandTotal' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            totalRevenue: 1,
+          },
+        },
+      ]);
+      const completeBookingCount = await this.bookingModel
+        .find({
+          status: 'completed',
+        })
+        .countDocuments();
+      const cancelledBookingCount = await this.bookingModel
+        .find({
+          status: 'cancelled',
+        })
+        .countDocuments();
+      const bookingBookingCount = await this.bookingModel
+        .find({ status: 'Booked' })
+        .countDocuments();
+      const totalVehicles = await this.bookingModel.find({}).countDocuments();
+      const mostBookedVehicle = await this.bookingModel.aggregate([
+        {
+          $group: {
+            _id: '$vehicleId',
+            totalBookings: { $sum: 1 },
+            latestBookingDate: { $max: '$createdAt' },
+          },
+        },
+        {
+          $sort: { totalBookings: -1, latestBookingDate: -1 },
+        },
+        {
+          $limit: 1,
+        },
+        {
+          $lookup: {
+            from: 'vehicles',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'vehicleDetails',
+          },
+        },
+        {
+          $unwind: '$vehicleDetails',
+        },
+      ]);
+      res.status(HttpStatus.OK).json({
+        totalAmount: totalAmount[0].totalAmount,
+        hostGenerated: hostGenerated[0].totalRevenue,
+        completeBookingCount,
+        cancelledBookingCount,
+        bookingBookingCount,
+        totalVehicles,
+        amountGeneratedEachMonth,
+        mostBookedVehicle: mostBookedVehicle[0].vehicleDetails,
+      });
+    } catch (err) {
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Internal Server Error' });
+    }
+  }
 
   async blockuser(id: string, @Res() res: Response) {
     try {

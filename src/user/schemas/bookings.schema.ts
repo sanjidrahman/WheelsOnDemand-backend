@@ -3,7 +3,7 @@ import { User } from './user.schema';
 import mongoose, { Document } from 'mongoose';
 import { Vehicles } from 'src/admin/schemas/vehicles.schema';
 
-@Schema()
+@Schema({ timestamps: true })
 export class Booking extends Document {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   userId: User;

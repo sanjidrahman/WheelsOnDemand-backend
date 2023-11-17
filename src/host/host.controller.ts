@@ -59,9 +59,14 @@ export class HostController {
     this.hostService.hostdetails(req, res);
   }
 
+  @Get('dashboard')
+  getDashboard(@Res() res: Response, @Req() req: Request) {
+    return this.hostService.dashboard(res, req);
+  }
+
   @Get('hosts')
   findAll(@Res({ passthrough: true }) res: Response) {
-    return this.hostService.getAll(res);
+    return this.hostService.getAllHost(res);
   }
 
   @Patch('update-host')

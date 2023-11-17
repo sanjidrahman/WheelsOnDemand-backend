@@ -201,6 +201,11 @@ export class AdminController {
     return this.adminService.getAllBookings(res);
   }
 
+  @Get('dashboard')
+  getDashboard(@Res() res: Response) {
+    return this.adminService.dashboard(res);
+  }
+
   @Post('logout')
   logoutUser(@Req() req: Request, @Res() res: Response) {
     return this.adminService.logout(req, res);
