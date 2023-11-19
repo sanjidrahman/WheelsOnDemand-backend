@@ -462,7 +462,8 @@ export class AdminService {
         );
       }
       return;
-    } catch (error) {
+    } catch (err) {
+      console.log(err.messsage, 'UPLOAD DOC');
       res.status(500).json({ message: 'Internal Server Error' });
     }
   }
@@ -475,6 +476,7 @@ export class AdminService {
       );
       return;
     } catch (err) {
+      console.log(err.messsage, 'UPLOAD VEHICLE');
       res.status(500).json({ message: 'Internal Server Error' });
     }
   }
@@ -604,15 +606,20 @@ export class AdminService {
     id: string,
   ) {
     try {
+      // console.log(files, editVehicle);
       const { name, brand, model, transmission, fuel, price, location } =
         editVehicle;
       await this.vehicleModel.findOneAndUpdate(
         { _id: id },
         { $set: { name, brand, model, transmission, fuel, price, location } },
       );
-      await this.uploadVehicleImage(files, res, id);
+      if (files) {
+        if (files.files) await this.uploadVehicleImage(files.files, res, id);
+        if (files.doc[0]) await this.uploadVehicleDoc(files.doc[0], res, id);
+      }
       res.status(200).json({ message: 'Success' });
     } catch (err) {
+      console.log(err.message, 'EDIT VEHCICLE');
       res.status(500).json({ message: 'Internal Error' });
     }
   }

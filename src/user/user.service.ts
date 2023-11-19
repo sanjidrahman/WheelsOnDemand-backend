@@ -476,6 +476,7 @@ export class UserService {
 
   async forgotpassword(@Res() res: Response, email: string) {
     try {
+      console.log(email);
       const existEmail = await this._userModel.findOne({ email: email });
       if (!existEmail)
         res

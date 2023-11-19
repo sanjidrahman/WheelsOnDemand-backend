@@ -29,7 +29,7 @@ export class HostService {
     private vehicleModel: Model<Vehicles>,
     @InjectModel('Booking')
     private bookingModel: Model<Booking>,
-    private mailServive: MailerService,
+    private _mailServive: MailerService,
     private jwtservice: JwtService,
   ) {}
 
@@ -101,7 +101,7 @@ export class HostService {
   }
 
   async sendMail(name: string, email: string, otp: any) {
-    return this.mailServive.sendMail({
+    return this._mailServive.sendMail({
       to: email,
       from: process.env.DEV_MAIL,
       subject: 'WheelsOnDemand Email Verification',
@@ -173,6 +173,70 @@ export class HostService {
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async forgotpassword(@Res() res: Response, email: string) {
+    try {
+      const existEmail = await this.hostModel.findOne({ email: email });
+      if (!existEmail)
+        res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Email not found. Please provide correct email' });
+
+      await this.sendForgotPassMail(res, existEmail.email, existEmail._id);
+      res.status(HttpStatus.OK).json({ message: 'Success' });
+    } catch (err) {
+      console.log(err.message);
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  async sendForgotPassMail(@Res() res: Response, email: string, id: string) {
+    try {
+      return this._mailServive.sendMail({
+        to: email,
+        from: process.env.DEV_MAIL,
+        subject: 'WheelsOnDemand Forgot Password',
+        html: `
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background-color: #f4f4f4; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+              <h2 style="color: #333333;">Forgot Your Password?</h2>
+              <p style="color: #666666;">No worries! It happens to the best of us. Click the link below to reset your password:</p>
+              <p>
+                  <a href="http://localhost:4200/host/reset-password/${id}" style="display: inline-block; padding: 10px 20px; font-size: 16px; text-decoration: none; background-color: #007BFF; color: #ffffff; border-radius: 5px;">Reset Password</a>
+              </p>
+              <p>If you didn't request a password reset, please ignore this email.</p>
+              <p>Thanks,<br>Your WheelsOnDemand Team</p>
+          </div>
+      `,
+      });
+    } catch (err) {
+      console.log(err.message);
+      return res.status(500).json({ message: err.message });
+    }
+  }
+
+  async resetPass(
+    @Res() res: Response,
+    hostId: string,
+    newpassword: string,
+    confirmpassword: string,
+  ) {
+    try {
+      console.log(hostId);
+      if (newpassword !== confirmpassword) {
+        return res
+          .status(HttpStatus.NOT_ACCEPTABLE)
+          .json({ message: 'Confirm password and new password are not same' });
+      }
+      const hashpass = await bcrypt.hash(newpassword, 10);
+      await this.hostModel.findOneAndUpdate(
+        { _id: hostId },
+        { $set: { password: hashpass } },
+      );
+      res.status(HttpStatus.OK).json({ message: 'Success' });
+    } catch (err) {
+      return res.status(500).json({ message: err.message });
     }
   }
 
@@ -257,9 +321,37 @@ export class HostService {
         },
       ]);
 
-      const bookedCount = await this.bookingModel
-        .find({ status: 'Booked' })
-        .countDocuments();
+      const bookedCount = await this.bookingModel.aggregate([
+        {
+          $lookup: {
+            from: 'vehicles',
+            localField: 'vehicleId',
+            foreignField: '_id',
+            as: 'vehicleDetails',
+          },
+        },
+        {
+          $unwind: '$vehicleDetails',
+        },
+        {
+          $match: {
+            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(claims.id),
+            status: 'Booked',
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            count: 1,
+          },
+        },
+      ]);
 
       const completedCount = await this.bookingModel
         .find({ status: 'completed' })
@@ -305,16 +397,29 @@ export class HostService {
           $limit: 5,
         },
       ]);
+      let hostTotalRevenue: number;
+      let mostOrdered: number;
+      let bookedTotalCount: number;
+      if (hostRevenue[0] && mostOrderedVehicle[0] && bookedCount[0]) {
+        hostTotalRevenue = hostRevenue[0].totalRevenue;
+        mostOrdered = mostOrderedVehicle[0].vehicle;
+        bookedTotalCount = bookedCount[0].count;
+      } else {
+        hostTotalRevenue = 0;
+        mostOrdered = 0;
+        bookedTotalCount = 0;
+      }
 
       res.status(HttpStatus.OK).json({
-        hostRevenue: hostRevenue[0].totalRevenue || null,
-        trending: mostOrderedVehicle[0].vehicle || null,
-        bookedCount,
+        hostRevenue: hostTotalRevenue,
+        trending: mostOrdered,
+        bookedCount: bookedTotalCount,
         completedCount,
         cancelledBooking,
         latestOrders,
       });
     } catch (err) {
+      console.log(err.message);
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({ message: 'Internal Server Error' });
@@ -499,6 +604,7 @@ export class HostService {
 
   async uploadVehicleDoc(doc: any, @Res() res: Response, id?: string) {
     try {
+      console.log(doc);
       await this.vehicleModel.findOneAndUpdate(
         { _id: id },
         { $set: { document: doc.filename } },
@@ -511,15 +617,28 @@ export class HostService {
     }
   }
 
-  async hostvehicles(@Res() res: Response, @Req() req: Request) {
+  async hostvehicles(@Res() res: Response, @Req() req: Request, page: number) {
     try {
       const cookie = req.cookies['jwtHost'];
       const claims = this.jwtservice.verify(cookie);
-      const vehicle = await this.vehicleModel.find({
-        createdBy: claims.id,
-        isVerified: true,
-      });
-      res.send(vehicle);
+      const perPage = 3;
+      const currPage = Number(page) || 1;
+      const skip = perPage * (currPage - 1);
+      const vehicle = await this.vehicleModel
+        .find({
+          createdBy: claims.id,
+          isVerified: true,
+        })
+        .limit(perPage)
+        .skip(skip);
+      const count = await this.vehicleModel
+        .find({
+          createdBy: claims.id,
+          isVerified: true,
+        })
+        .countDocuments();
+      const totalPage = Math.ceil(count / perPage);
+      res.json({ vehicle, totalPage });
     } catch (err) {
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -540,7 +659,10 @@ export class HostService {
         { _id: id },
         { $set: { name, brand, model, transmission, fuel, price, location } },
       );
-      await this.uploadVehicleImage(files, res, id);
+      if (files) {
+        if (files.files) await this.uploadVehicleImage(files.files, res, id);
+        if (files.doc) await this.uploadVehicleDoc(files.doc[0], res, id);
+      }
       res.status(200).json({ message: 'Success' });
     } catch (err) {
       res

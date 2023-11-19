@@ -19,7 +19,6 @@ import { Request, Response } from 'express';
 import {
   FileFieldsInterceptor,
   FileInterceptor,
-  FilesInterceptor,
 } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/file-uploads.utils';
@@ -142,20 +141,27 @@ export class AdminController {
 
   @Patch('edit-vehicle/:id')
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      storage: diskStorage({
-        destination: './files',
-        filename: editFileName,
-      }),
-      fileFilter: imageFileFilter,
-    }),
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 10 },
+        { name: 'doc', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './files',
+          filename: editFileName,
+        }),
+        fileFilter: imageFileFilter,
+      },
+    ),
   )
   editVehicle(
-    @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() editVehicle: UpdateVehicleDto,
     @Param('id') id: any,
     @Res() res: Response,
+    @UploadedFiles() files?: Array<Express.Multer.File>,
   ) {
+    console.log(editVehicle, files, 'HII DAAA');
     return this.adminService.editVehicle(files, editVehicle, res, id);
   }
 

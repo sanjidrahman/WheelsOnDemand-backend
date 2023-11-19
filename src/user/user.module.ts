@@ -40,5 +40,6 @@ import moment from 'moment';
       useValue: moment,
     },
   ],
+  exports: [MongooseModule],
 })
 export class UserModule {}

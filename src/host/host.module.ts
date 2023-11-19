@@ -30,5 +30,6 @@ import { BookingSchema } from 'src/user/schemas/bookings.schema';
   ],
   controllers: [HostController],
   providers: [HostService],
+  exports: [MongooseModule],
 })
 export class HostModule {}

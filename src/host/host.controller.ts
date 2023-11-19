@@ -21,7 +21,6 @@ import { LoginHostDto } from './dto/login-host.dto';
 import {
   FileFieldsInterceptor,
   FileInterceptor,
-  FilesInterceptor,
 } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/file-uploads.utils';
@@ -120,8 +119,12 @@ export class HostController {
   }
 
   @Get('host-vehicles')
-  hostvehicle(@Res() res: Response, @Req() req: Request) {
-    return this.hostService.hostvehicles(res, req);
+  hostvehicle(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Query('page') page?: number,
+  ) {
+    return this.hostService.hostvehicles(res, req, page);
   }
 
   @Post('add-vehicle')
@@ -151,19 +154,25 @@ export class HostController {
 
   @Patch('edit-vehicle/:id')
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      storage: diskStorage({
-        destination: './files',
-        filename: editFileName,
-      }),
-      fileFilter: imageFileFilter,
-    }),
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 10 },
+        { name: 'doc', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './files',
+          filename: editFileName,
+        }),
+        fileFilter: imageFileFilter,
+      },
+    ),
   )
   editVehicle(
-    @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() editVehicle: UpdateVehicleDto,
     @Param('id') id: any,
     @Res() res: Response,
+    @UploadedFiles() files?: Array<Express.Multer.File>,
   ) {
     return this.hostService.editVehicle(files, editVehicle, res, id);
   }
@@ -199,6 +208,21 @@ export class HostController {
     @Body('status') status: string,
   ) {
     this.hostService.editBookingStatus(res, b_id, status);
+  }
+
+  @Post('forgot-password')
+  forgotpass(@Res() res: Response, @Body('email') email: string) {
+    return this.hostService.forgotpassword(res, email);
+  }
+
+  @Patch('reset-password/:h_id')
+  resetPassword(
+    @Res() res: Response,
+    @Param('h_id') hostId: string,
+    @Body('newpass') newpassword: string,
+    @Body('confirmpass') confirmpass: string,
+  ) {
+    return this.hostService.resetPass(res, hostId, newpassword, confirmpass);
   }
 
   @Post('logout')

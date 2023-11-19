@@ -6,6 +6,8 @@ export const exclude = [
   'user/reset-password/:u_id',
   '/host/signup',
   '/host/login',
+  '/host/forgot-password',
+  'host/reset-password/:h_id',
   '/host/auth/login',
   '/host/verify-otp',
   '/admin/login',

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 
 export class CreateVehicleDto {
   @IsNotEmpty()
@@ -21,10 +21,4 @@ export class CreateVehicleDto {
 
   @IsNotEmpty()
   price: number;
-
-  // @IsNotEmpty()
-  // document: string;
-
-  @IsOptional()
-  image: string[];
 }
