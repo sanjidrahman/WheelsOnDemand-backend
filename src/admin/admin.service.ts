@@ -38,7 +38,7 @@ export class AdminService {
     private mailService: MailerService,
   ) {}
 
-  async AdminLogin(logindto: AdminLoginDto, @Res() res: Response) {
+  async adminLogin(logindto: AdminLoginDto, @Res() res: Response) {
     try {
       const { email, password } = logindto;
       const user = await this.adminModel.findOne({ email: email });

@@ -11,6 +11,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { exclude } from './auth/auth.excluded';
 import { AuthMiddleware } from './auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { DialogFlowModule } from './dialog-flow/dialog-flow.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { JwtService } from '@nestjs/jwt';
     UserModule,
     AdminModule,
     HostModule,
+    DialogFlowModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtService],

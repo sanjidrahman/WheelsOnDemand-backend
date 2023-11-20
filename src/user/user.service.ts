@@ -194,6 +194,7 @@ export class UserService {
       } else {
         this.tempChoice = choisedto;
       }
+      res.status(200).json({ message: 'Success' });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Servet Error' });
     }
@@ -444,6 +445,7 @@ export class UserService {
     @Res() res: Response,
     @Req() req: Request,
     vid: string,
+    rating: number,
     review: string,
   ) {
     try {
@@ -451,7 +453,7 @@ export class UserService {
       const u = await this._vehicleModel
         .findOneAndUpdate(
           { _id: vid },
-          { $push: { review: { userId: userid, review } } },
+          { $push: { review: { userId: userid, review, rating } } },
           { new: true },
         )
         .exec();
@@ -534,6 +536,22 @@ export class UserService {
       res.status(HttpStatus.OK).json({ message: 'Success' });
     } catch (err) {
       return res.status(500).json({ message: err.message });
+    }
+  }
+
+  async isBooked(@Res() res: Response, @Req() req: Request, vid: string) {
+    try {
+      const userid = req.body.userId;
+      const booking = await this._bookingModel.findOne({
+        vehicleId: vid,
+        userId: userid,
+        status: 'completed',
+      });
+      const hasCompletedBooking = !!booking;
+      res.status(HttpStatus.OK).json({ hasCompletedBooking });
+    } catch (err) {
+      console.log(err.message, 'TTTT');
+      return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
 

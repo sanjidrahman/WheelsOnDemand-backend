@@ -38,10 +38,20 @@ export class Vehicles extends Document {
 
   @Prop({
     type: [
-      { userId: MongooseSchema.Types.ObjectId, review: String, replay: String },
+      {
+        userId: MongooseSchema.Types.ObjectId,
+        review: String,
+        rating: Number,
+        replay: String,
+      },
     ],
   })
-  review: { userId: Types.ObjectId; review: string; replay?: string }[];
+  review: {
+    userId: Types.ObjectId;
+    review: string;
+    rating: number;
+    replay?: string;
+  }[];
 }
 
 export const vehicleSchema = SchemaFactory.createForClass(Vehicles);

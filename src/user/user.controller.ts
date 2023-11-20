@@ -145,9 +145,10 @@ export class AuthController {
     @Res() res: Response,
     @Req() req: Request,
     @Param('v_id') v_id: string,
+    @Body('rating') rating: number,
     @Body('review') review: string,
   ) {
-    return this.userservice.postReview(res, req, v_id, review);
+    return this.userservice.postReview(res, req, v_id, rating, review);
   }
 
   @Patch('delete-review/:v_id')
@@ -172,6 +173,15 @@ export class AuthController {
     @Body('confirmpass') confirmpass: string,
   ) {
     return this.userservice.resetPass(res, userId, newpassword, confirmpass);
+  }
+
+  @Post('isBooked/:v_id')
+  isBooked(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Param('v_id') vid: string,
+  ) {
+    return this.userservice.isBooked(res, req, vid);
   }
 
   @Post('logout')

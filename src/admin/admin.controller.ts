@@ -32,7 +32,7 @@ export class AdminController {
 
   @Post('/login')
   login(@Body() logindto: AdminLoginDto, @Res() res: Response) {
-    this.adminService.AdminLogin(logindto, res);
+    this.adminService.adminLogin(logindto, res);
   }
 
   // @Post('/register')
