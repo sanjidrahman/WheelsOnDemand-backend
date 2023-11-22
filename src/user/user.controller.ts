@@ -51,8 +51,12 @@ export class AuthController {
   }
 
   @Post('verify-otp')
-  verify(@Res({ passthrough: true }) res: Response, @Body() otp: any) {
-    return this.userservice.verifyOtp(res, otp);
+  verify(
+    @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
+    @Body() otp: any,
+  ) {
+    return this.userservice.verifyOtp(res, req, otp);
   }
 
   @Put('store-choice')
@@ -60,7 +64,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Body() choicedto: ChoiseDto,
   ) {
-    console.log(choicedto);
+    // console.log(choicedto);
     return this.userservice.storeChoices(res, choicedto);
   }
 

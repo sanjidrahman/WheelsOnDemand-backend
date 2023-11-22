@@ -16,6 +16,7 @@ export class AuthMiddleware implements NestMiddleware {
     const authHeaders = req.headers.authorization;
     if (authHeaders && (authHeaders as string).split(' ')[1]) {
       const token = (authHeaders as string).split(' ')[1];
+      // console.log(token, 'TOKEN');
       if (!token) {
         throw new HttpException('Not authorized.', HttpStatus.UNAUTHORIZED);
       }

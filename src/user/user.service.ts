@@ -74,7 +74,11 @@ export class UserService {
     }
   }
 
-  async verifyOtp(@Res({ passthrough: true }) res: Response, otp: any) {
+  async verifyOtp(
+    @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
+    otp: any,
+  ) {
     try {
       const otpb = otp.otp;
       if (this.otpgenetated == otpb) {
@@ -131,6 +135,7 @@ export class UserService {
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
       });
+
       return { token };
     } catch (err) {
       res.status(500).json({ message: 'Internal Error' });
@@ -186,15 +191,16 @@ export class UserService {
           pickup,
           dropoff,
         };
+        // console.log(updateChoice);
         await this._userModel.findOneAndUpdate(
           { _id: userId },
           { $set: { choices: updateChoice } },
         );
         return res.status(200).json({ message: 'Success' });
       } else {
-        this.tempChoice = choisedto;
+        // this.tempChoice = choisedto;
       }
-      res.status(200).json({ message: 'Success' });
+      // res.status(200).json({ message: 'Success' });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Servet Error' });
     }
@@ -202,6 +208,8 @@ export class UserService {
 
   async getVehicles(@Res() res: Response, @Req() req: Request, filter?: any) {
     try {
+      console.log('before circular');
+
       const userDetails = await this._userModel.findById({
         _id: req.body.userId,
       });

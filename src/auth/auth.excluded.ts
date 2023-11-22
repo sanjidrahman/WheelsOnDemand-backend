@@ -12,4 +12,5 @@ export const exclude = [
   '/host/verify-otp',
   '/admin/login',
   '/admin/getFile/:filename',
+  '/webhook',
 ];

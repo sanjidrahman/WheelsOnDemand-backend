@@ -1,37 +1,20 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req } from '@nestjs/common';
 import { DialogFlowService } from './dialog-flow.service';
+import { Request, Response } from 'express';
 // import { CreateDialogFlowDto } from './dto/create-dialog-flow.dto';
 // import { UpdateDialogFlowDto } from './dto/update-dialog-flow.dto';
 
-@Controller('dialog-flow')
+@Controller('webhook')
 export class DialogFlowController {
   constructor(private readonly dialogFlowService: DialogFlowService) {}
 
-  @Post('test')
-  dialogPost(@Body() body: any) {
-    return this.dialogFlowService.processDialogflowRequest(body);
-  }
-
   // @Get()
-  // findAll() {
-  //   return this.dialogFlowService.findAll();
+  // intialDialogReponse(@Res() res: Response) {
+  //   return this.dialogFlowService.intialMessage(res);
   // }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.dialogFlowService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() updateDialogFlowDto: UpdateDialogFlowDto,
-  // ) {
-  //   return this.dialogFlowService.update(+id, updateDialogFlowDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.dialogFlowService.remove(+id);
-  // }
+  @Post()
+  dialogPost(@Res() res: Response, @Req() req: Request, @Body() body: any) {
+    return this.dialogFlowService.processDialogflowRequest(res, req, body);
+  }
 }
