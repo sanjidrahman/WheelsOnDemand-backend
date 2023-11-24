@@ -30,7 +30,7 @@ export class DialogFlowService {
     body: any,
   ): Promise<any> {
     try {
-      console.log(req.body.userId, 'cookies');
+      // console.log(req.cookies['jwt'], 'cookies');
       const intentName = body.queryResult.intent.displayName;
       const params = body.queryResult.parameters;
       // console.log(req.headers);

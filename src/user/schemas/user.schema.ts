@@ -27,6 +27,9 @@ export class User extends Document {
   };
 
   @Prop()
+  nearby: string[];
+
+  @Prop()
   profile: string;
 
   @Prop()

@@ -206,10 +206,17 @@ export class UserService {
     }
   }
 
-  async getVehicles(@Res() res: Response, @Req() req: Request, filter?: any) {
+  async getVehicles(
+    @Res() res: Response,
+    @Req() req: Request,
+    filter?: any,
+    page?: number,
+  ) {
     try {
-      console.log('before circular');
-
+      const perPage = 3;
+      const currPage = Number(page) || 1;
+      const skip = perPage * (currPage - 1);
+      console.log(currPage, skip);
       const userDetails = await this._userModel.findById({
         _id: req.body.userId,
       });
@@ -259,9 +266,17 @@ export class UserService {
         {
           $match: filter,
         },
+        {
+          $skip: skip,
+        },
+        {
+          $limit: perPage,
+        },
       ]);
+      const count = await this._vehicleModel.countDocuments();
+      const totalPage = Math.ceil(count / perPage);
       // console.log(vehicles);
-      res.status(200).send({ vehicles });
+      res.status(200).send({ vehicles, totalPage });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Error' });
     }

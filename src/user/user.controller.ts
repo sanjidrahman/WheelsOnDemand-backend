@@ -68,13 +68,14 @@ export class AuthController {
     return this.userservice.storeChoices(res, choicedto);
   }
 
-  @Get('vehicles')
+  @Get('vehicles/:page')
   getVehicles(
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
     @Query() filter: any,
+    @Param('page') page?: number,
   ) {
-    return this.userservice.getVehicles(res, req, filter);
+    return this.userservice.getVehicles(res, req, filter, +page);
   }
 
   @Post('book-vehicle')
