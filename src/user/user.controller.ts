@@ -62,10 +62,12 @@ export class AuthController {
   @Put('store-choice')
   storeChoice(
     @Res({ passthrough: true }) res: Response,
-    @Body() choicedto: ChoiseDto,
+    @Req() req: Request,
+    @Body('choice') choicedto: ChoiseDto,
+    @Body('placesInRange') nearBy: string[],
   ) {
-    // console.log(choicedto);
-    return this.userservice.storeChoices(res, choicedto);
+    console.log(choicedto, nearBy);
+    return this.userservice.storeChoices(res, req, choicedto, nearBy);
   }
 
   @Get('vehicles/:page')
@@ -134,6 +136,7 @@ export class AuthController {
     @Req() req: Request,
     @Body('reason') reason: any,
     @Body('amount') refund: number,
+    @Body('refundvia') refundvia: string,
     @Param('b_id') bookId: string,
   ) {
     return this.userservice.cancelBooking(
@@ -141,6 +144,7 @@ export class AuthController {
       req,
       reason.reason,
       refund,
+      refundvia,
       bookId,
     );
   }

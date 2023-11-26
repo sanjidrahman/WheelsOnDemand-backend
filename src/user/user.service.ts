@@ -15,6 +15,12 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { Booking } from './schemas/bookings.schema';
 import * as moment from 'moment';
 import { UpdateUserDto } from './dto/edit-user.dto';
+import Razorpay from 'razorpay';
+
+// const instance = new Razorpay({
+//   key_id: process.env.RAZOR_KEY_ID,
+//   key_secret: process.env.RAZOR_KEY_SECRET,
+// });
 
 @Injectable()
 export class UserService {
@@ -179,10 +185,17 @@ export class UserService {
     }
   }
 
-  async storeChoices(@Res() res: Response, choisedto: ChoiseDto) {
+  async storeChoices(
+    @Res() res: Response,
+    req: Request,
+    choisedto: ChoiseDto,
+    nearBy: string[],
+  ) {
     try {
-      if (choisedto.userId) {
-        const { userId, startDate, endDate, pickup, dropoff } = choisedto;
+      if (req.body.userId) {
+        const userId = req.body.userId;
+        const { startDate, endDate, pickup, dropoff } = choisedto;
+        console.log(userId, startDate, endDate, pickup, dropoff);
         const updatedStartDate = moment(startDate).format('YYYY-MM-DD');
         const updatedEndDate = moment(endDate).format('YYYY-MM-DD');
         const updateChoice = {
@@ -194,7 +207,7 @@ export class UserService {
         // console.log(updateChoice);
         await this._userModel.findOneAndUpdate(
           { _id: userId },
-          { $set: { choices: updateChoice } },
+          { $set: { choices: updateChoice, nearby: nearBy } },
         );
         return res.status(200).json({ message: 'Success' });
       } else {
@@ -202,6 +215,7 @@ export class UserService {
       }
       // res.status(200).json({ message: 'Success' });
     } catch (err) {
+      console.log(err.message);
       return res.status(500).json({ message: 'Internal Servet Error' });
     }
   }
@@ -216,7 +230,6 @@ export class UserService {
       const perPage = 3;
       const currPage = Number(page) || 1;
       const skip = perPage * (currPage - 1);
-      console.log(currPage, skip);
       const userDetails = await this._userModel.findById({
         _id: req.body.userId,
       });
@@ -264,6 +277,13 @@ export class UserService {
           },
         },
         {
+          $match: {
+            location: {
+              $in: userDetails.nearby,
+            },
+          },
+        },
+        {
           $match: filter,
         },
         {
@@ -273,9 +293,12 @@ export class UserService {
           $limit: perPage,
         },
       ]);
-      const count = await this._vehicleModel.countDocuments();
+      const count = await this._vehicleModel
+        .find({ isVerified: true })
+        .countDocuments();
+      console.log(count);
       const totalPage = Math.ceil(count / perPage);
-      // console.log(vehicles);
+      // console.log(vehicles, totalPage);
       res.status(200).send({ vehicles, totalPage });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Error' });
@@ -446,19 +469,37 @@ export class UserService {
     @Req() req: Request,
     reason: string,
     refund: number,
+    refundvia: string,
     bookId: string,
   ) {
     try {
-      const userid = req.body.userId;
-      await this._bookingModel.findOneAndUpdate(
-        { _id: bookId },
-        { $set: { status: 'cancelled', reason: reason } },
-      );
-      await this._userModel.findOneAndUpdate(
-        { _id: userid },
-        { $inc: { wallet: refund } },
-      );
-      res.status(200).json({ message: 'Success' });
+      if (refundvia == 'wallet') {
+        const userid = req.body.userId;
+        await this._bookingModel.findOneAndUpdate(
+          { _id: bookId },
+          { $set: { status: 'cancelled', reason: reason } },
+        );
+        await this._userModel.findOneAndUpdate(
+          { _id: userid },
+          { $inc: { wallet: refund } },
+        );
+        res.status(200).json({ message: 'Success' });
+      } else {
+        const booking = await this._bookingModel.findOne({ _id: bookId });
+        // instance.payments
+        //   .refund(booking.razorId, {
+        //     amount: refund.toString(),
+        //     speed: 'optimum',
+        //     receipt: 'Receipt No. 31',
+        //   })
+        //   .then((res) => {
+        //     console.log(res);
+        //   })
+        //   .catch((err) => {
+        //     console.log(err);
+        //   });
+        console.log('Nothing for now!!');
+      }
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }

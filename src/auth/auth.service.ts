@@ -13,12 +13,9 @@ export class AuthMiddleware implements NestMiddleware {
   constructor(private readonly jwtService: JwtService) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    // console.log(req.headers);
-    
     const authHeaders = req.headers.authorization;
     if (authHeaders && (authHeaders as string).split(' ')[1]) {
       const token = (authHeaders as string).split(' ')[1];
-      // console.log(token, 'TOKEN');
       if (!token) {
         throw new HttpException('Not authorized.', HttpStatus.UNAUTHORIZED);
       }
