@@ -24,22 +24,22 @@ export class HostService {
   otpgenerated!: any;
   constructor(
     @InjectModel('Host')
-    private hostModel: Model<Host>,
+    private _hostModel: Model<Host>,
     @InjectModel('Vehicles')
-    private vehicleModel: Model<Vehicles>,
+    private _vehicleModel: Model<Vehicles>,
     @InjectModel('Booking')
-    private bookingModel: Model<Booking>,
+    private _bookingModel: Model<Booking>,
     private _mailServive: MailerService,
-    private jwtservice: JwtService,
+    private _jwtservice: JwtService,
   ) {}
 
   async create(createHostDto: CreateHostDto, @Res() res: Response) {
     try {
       const { name, email, password, phone, confirmPass } = createHostDto;
       console.log(name, email, password, phone, confirmPass);
-      const existmail = await this.hostModel.findOne({ email: email });
+      const existmail = await this._hostModel.findOne({ email: email });
       console.log(existmail);
-      const existNumber = await this.hostModel.findOne({ phone: phone });
+      const existNumber = await this._hostModel.findOne({ phone: phone });
       console.log(existNumber);
       if (existmail) {
         return res.status(400).json({ message: 'Email is already registered' });
@@ -82,10 +82,10 @@ export class HostService {
     try {
       const otpg = otp.otp;
       if (this.otpgenerated == otpg) {
-        const host = await this.hostModel.create(this.tempHost);
+        const host = await this._hostModel.create(this.tempHost);
         if (host) {
           const payload = { id: host._id, role: 'host' };
-          const token = this.jwtservice.sign(payload);
+          const token = this._jwtservice.sign(payload);
           res.cookie('jwtHost', token, {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000,
@@ -137,7 +137,7 @@ export class HostService {
   async login(hostlogindto: LoginHostDto, @Res() res: Response) {
     try {
       const { email, password } = hostlogindto;
-      const hostData = await this.hostModel.findOne({ email: email });
+      const hostData = await this._hostModel.findOne({ email: email });
       console.log(stringify(hostData, null, 2));
       if (hostData) {
         if (!hostData.isBlocked) {
@@ -145,7 +145,7 @@ export class HostService {
             const passMatch = await bcrypt.compare(password, hostData.password);
             if (passMatch) {
               const payload = { id: hostData._id, role: 'host' };
-              const token = this.jwtservice.sign(payload);
+              const token = this._jwtservice.sign(payload);
               res.cookie('jwtHost', token, {
                 httpOnly: true,
                 maxAge: 24 * 60 * 60 * 1000,
@@ -178,7 +178,7 @@ export class HostService {
 
   async forgotpassword(@Res() res: Response, email: string) {
     try {
-      const existEmail = await this.hostModel.findOne({ email: email });
+      const existEmail = await this._hostModel.findOne({ email: email });
       if (!existEmail)
         res
           .status(HttpStatus.NOT_FOUND)
@@ -230,7 +230,7 @@ export class HostService {
           .json({ message: 'Confirm password and new password are not same' });
       }
       const hashpass = await bcrypt.hash(newpassword, 10);
-      await this.hostModel.findOneAndUpdate(
+      await this._hostModel.findOneAndUpdate(
         { _id: hostId },
         { $set: { password: hashpass } },
       );
@@ -243,8 +243,8 @@ export class HostService {
   async dashboard(@Res() res: Response, @Req() req: Request) {
     try {
       const cookie = req.cookies['jwtHost'];
-      const claims = this.jwtservice.verify(cookie);
-      const hostRevenue = await this.bookingModel.aggregate([
+      const claims = this._jwtservice.verify(cookie);
+      const hostRevenue = await this._bookingModel.aggregate([
         {
           $lookup: {
             from: 'vehicles',
@@ -282,7 +282,7 @@ export class HostService {
           },
         },
       ]);
-      const mostOrderedVehicle = await this.bookingModel.aggregate([
+      const mostOrderedVehicle = await this._bookingModel.aggregate([
         {
           $lookup: {
             from: 'vehicles',
@@ -321,7 +321,7 @@ export class HostService {
         },
       ]);
 
-      const bookedCount = await this.bookingModel.aggregate([
+      const bookedCount = await this._bookingModel.aggregate([
         {
           $lookup: {
             from: 'vehicles',
@@ -353,15 +353,15 @@ export class HostService {
         },
       ]);
 
-      const completedCount = await this.bookingModel
+      const completedCount = await this._bookingModel
         .find({ status: 'completed' })
         .countDocuments();
 
-      const cancelledBooking = await this.bookingModel
+      const cancelledBooking = await this._bookingModel
         .find({ status: 'cancelled' })
         .countDocuments();
 
-      const latestOrders = await this.bookingModel.aggregate([
+      const latestOrders = await this._bookingModel.aggregate([
         {
           $lookup: {
             from: 'vehicles',
@@ -428,7 +428,7 @@ export class HostService {
 
   async getAllHost(@Res() res: Response) {
     try {
-      const hosts = await this.hostModel.find({});
+      const hosts = await this._hostModel.find({});
       return { hosts };
     } catch (err) {
       res
@@ -443,7 +443,7 @@ export class HostService {
         originalname: file.originalname,
         filename: file.filename,
       };
-      const userup = await this.hostModel.updateOne(
+      const userup = await this._hostModel.updateOne(
         { _id: id },
         { $set: { document: response.filename } },
       );
@@ -462,8 +462,8 @@ export class HostService {
         filename: file.filename,
       };
       const cookie = req.cookies['jwtHost'];
-      const claims = this.jwtservice.verify(cookie);
-      const userup = await this.hostModel.updateOne(
+      const claims = this._jwtservice.verify(cookie);
+      const userup = await this._hostModel.updateOne(
         { _id: claims.id },
         { $set: { profile: response.filename } },
       );
@@ -478,8 +478,8 @@ export class HostService {
   async hostdetails(@Req() req: Request, @Res() res: Response) {
     try {
       const cookie = req.cookies['jwtHost'];
-      const claims = this.jwtservice.verify(cookie);
-      const host = await this.hostModel.findById({ _id: claims.id });
+      const claims = this._jwtservice.verify(cookie);
+      const host = await this._hostModel.findById({ _id: claims.id });
       res.send(host);
     } catch (err) {
       res
@@ -496,8 +496,8 @@ export class HostService {
     try {
       const { name, phone } = updatehostdto;
       const cookie = req.cookies['jwtHost'];
-      const claims = this.jwtservice.verify(cookie);
-      await this.hostModel.findOneAndUpdate(
+      const claims = this._jwtservice.verify(cookie);
+      await this._hostModel.findOneAndUpdate(
         { _id: claims.id },
         { $set: { name: name, phone: phone } },
       );
@@ -514,8 +514,8 @@ export class HostService {
     try {
       const { oldPass, password, confirmPass } = data;
       const cookie = req.cookies['jwtHost'];
-      const claims = this.jwtservice.verify(cookie);
-      const hostData = await this.hostModel.findOne({ _id: claims.id });
+      const claims = this._jwtservice.verify(cookie);
+      const hostData = await this._hostModel.findOne({ _id: claims.id });
       const passMatch = await bcrypt.compare(oldPass, hostData.password);
       if (password !== confirmPass) {
         return res
@@ -532,7 +532,7 @@ export class HostService {
           .json({ message: 'New password cannot be same as old password' });
       }
       const hashpass = await bcrypt.hash(password, 10);
-      await this.hostModel.findOneAndUpdate(
+      await this._hostModel.findOneAndUpdate(
         { _id: claims.id },
         { $set: { password: hashpass } },
       );
@@ -562,8 +562,8 @@ export class HostService {
         location,
       } = createvehicledto;
       const cookie = req.cookies['jwtHost'];
-      const claims = this.jwtservice.verify(cookie);
-      const newCar = await this.vehicleModel.create({
+      const claims = this._jwtservice.verify(cookie);
+      const newCar = await this._vehicleModel.create({
         name,
         brand,
         fuel,
@@ -589,7 +589,7 @@ export class HostService {
   async uploadVehicleImage(files: any, @Res() res: Response, id?: string) {
     try {
       for (const f of files) {
-        await this.vehicleModel.findOneAndUpdate(
+        await this._vehicleModel.findOneAndUpdate(
           { _id: id },
           { $push: { images: f.filename } },
         );
@@ -605,7 +605,7 @@ export class HostService {
   async uploadVehicleDoc(doc: any, @Res() res: Response, id?: string) {
     try {
       console.log(doc);
-      await this.vehicleModel.findOneAndUpdate(
+      await this._vehicleModel.findOneAndUpdate(
         { _id: id },
         { $set: { document: doc.filename } },
       );
@@ -620,18 +620,18 @@ export class HostService {
   async hostvehicles(@Res() res: Response, @Req() req: Request, page: number) {
     try {
       const cookie = req.cookies['jwtHost'];
-      const claims = this.jwtservice.verify(cookie);
+      const claims = this._jwtservice.verify(cookie);
       const perPage = 3;
       const currPage = Number(page) || 1;
       const skip = perPage * (currPage - 1);
-      const vehicle = await this.vehicleModel
+      const vehicle = await this._vehicleModel
         .find({
           createdBy: claims.id,
           isVerified: true,
         })
         .limit(perPage)
         .skip(skip);
-      const count = await this.vehicleModel
+      const count = await this._vehicleModel
         .find({
           createdBy: claims.id,
           isVerified: true,
@@ -655,7 +655,7 @@ export class HostService {
     try {
       const { name, brand, model, transmission, fuel, price, location } =
         editVehicle;
-      await this.vehicleModel.findOneAndUpdate(
+      await this._vehicleModel.findOneAndUpdate(
         { _id: id },
         { $set: { name, brand, model, transmission, fuel, price, location } },
       );
@@ -673,9 +673,9 @@ export class HostService {
 
   async deleteImage(@Res() res: Response, id: string, file: string) {
     try {
-      const vehicleData = await this.vehicleModel.findOne({ _id: id });
+      const vehicleData = await this._vehicleModel.findOne({ _id: id });
       if (vehicleData.images.length > 1) {
-        await this.vehicleModel.findByIdAndUpdate(
+        await this._vehicleModel.findByIdAndUpdate(
           { _id: id },
           { $pull: { images: file } },
         );
@@ -701,7 +701,7 @@ export class HostService {
 
   async getVehicleDetails(@Res() res: Response, v_id: string) {
     try {
-      const vehicleDetails = await this.vehicleModel
+      const vehicleDetails = await this._vehicleModel
         .findOne({ _id: v_id })
         .populate('createdBy')
         .populate({
@@ -721,7 +721,7 @@ export class HostService {
 
   async deleteVehicle(@Res() res: Response, id: string) {
     try {
-      await this.vehicleModel.findOneAndDelete({ _id: id });
+      await this._vehicleModel.findOneAndDelete({ _id: id });
       res.status(200).json({ message: 'Success' });
     } catch (err) {
       res
@@ -733,7 +733,7 @@ export class HostService {
   async hostBooking(@Res() res: Response, @Req() req: Request) {
     try {
       const hostid = req.body.userId;
-      const vehicles: any = await this.bookingModel.aggregate([
+      const vehicles: any = await this._bookingModel.aggregate([
         {
           $lookup: {
             from: 'vehicles',
@@ -766,7 +766,7 @@ export class HostService {
 
   async editBookingStatus(@Res() res: Response, b_id: string, status: string) {
     try {
-      await this.bookingModel.findOneAndUpdate(
+      await this._bookingModel.findOneAndUpdate(
         { _id: b_id },
         { $set: { status: status } },
       );

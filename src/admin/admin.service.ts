@@ -25,23 +25,23 @@ import { Booking } from 'src/user/schemas/bookings.schema';
 export class AdminService {
   constructor(
     @InjectModel('User')
-    private userModel: Model<User>,
+    private _userModel: Model<User>,
     @InjectModel('Admin')
-    private adminModel: Model<Admin>,
+    private _adminModel: Model<Admin>,
     @InjectModel('Host')
-    private hostModel: Model<Host>,
+    private _hostModel: Model<Host>,
     @InjectModel('Vehicles')
-    private vehicleModel: Model<Vehicles>,
+    private _vehicleModel: Model<Vehicles>,
     @InjectModel('Booking')
-    private bookingModel: Model<Booking>,
-    private jwtservice: JwtService,
-    private mailService: MailerService,
+    private _bookingModel: Model<Booking>,
+    private _jwtservice: JwtService,
+    private _mailService: MailerService,
   ) {}
 
   async adminLogin(logindto: AdminLoginDto, @Res() res: Response) {
     try {
       const { email, password } = logindto;
-      const user = await this.adminModel.findOne({ email: email });
+      const user = await this._adminModel.findOne({ email: email });
 
       if (!user) {
         return res.status(404).json({ message: 'Admin not found' });
@@ -52,7 +52,7 @@ export class AdminService {
         return res.status(401).send({ message: 'Wrong Password' });
       }
       const payload = { id: user._id, role: 'admin' };
-      const token = this.jwtservice.sign(payload);
+      const token = this._jwtservice.sign(payload);
       res.cookie('jwtAdmin', token, {
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
@@ -77,7 +77,7 @@ export class AdminService {
   //     });
 
   //     const payload = { id: user._id, role: 'admin' };
-  //     const token = this.jwtservice.sign(payload);
+  //     const token = this._jwtservice.sign(payload);
   //     res.cookie('jwt', token, {
   //       httpOnly: true,
   //       maxAge: 24 * 60 * 60 * 1000,
@@ -93,7 +93,7 @@ export class AdminService {
       const amountGeneratedEachMonth: number[] = [];
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
-      const monlyAmount = await this.bookingModel.aggregate([
+      const monlyAmount = await this._bookingModel.aggregate([
         {
           $match: {
             createdAt: {
@@ -140,7 +140,7 @@ export class AdminService {
           }
         });
       });
-      const totalAmount = await this.bookingModel.aggregate([
+      const totalAmount = await this._bookingModel.aggregate([
         {
           $group: {
             _id: null,
@@ -154,7 +154,7 @@ export class AdminService {
           },
         },
       ]);
-      const hostGenerated = await this.bookingModel.aggregate([
+      const hostGenerated = await this._bookingModel.aggregate([
         {
           $lookup: {
             from: 'vehicles',
@@ -192,21 +192,21 @@ export class AdminService {
           },
         },
       ]);
-      const completeBookingCount = await this.bookingModel
+      const completeBookingCount = await this._bookingModel
         .find({
           status: 'completed',
         })
         .countDocuments();
-      const cancelledBookingCount = await this.bookingModel
+      const cancelledBookingCount = await this._bookingModel
         .find({
           status: 'cancelled',
         })
         .countDocuments();
-      const bookingBookingCount = await this.bookingModel
+      const bookingBookingCount = await this._bookingModel
         .find({ status: 'Booked' })
         .countDocuments();
-      const totalVehicles = await this.bookingModel.find({}).countDocuments();
-      const mostBookedVehicle = await this.bookingModel.aggregate([
+      const totalVehicles = await this._bookingModel.find({}).countDocuments();
+      const mostBookedVehicle = await this._bookingModel.aggregate([
         {
           $group: {
             _id: '$vehicleId',
@@ -251,11 +251,11 @@ export class AdminService {
 
   async blockuser(id: string, @Res() res: Response) {
     try {
-      const user = await this.userModel.findById({ _id: id });
+      const user = await this._userModel.findById({ _id: id });
       if (!user) {
         throw new UnauthorizedException('No user found');
       }
-      await this.userModel.findByIdAndUpdate(
+      await this._userModel.findByIdAndUpdate(
         { _id: id },
         { $set: { isBlocked: true } },
       );
@@ -267,11 +267,11 @@ export class AdminService {
 
   async unblockuser(id: string, @Res() res: Response) {
     try {
-      const user = await this.userModel.findById({ _id: id });
+      const user = await this._userModel.findById({ _id: id });
       if (!user) {
         throw new UnauthorizedException('No user found');
       }
-      await this.userModel.findByIdAndUpdate(
+      await this._userModel.findByIdAndUpdate(
         { _id: id },
         { $set: { isBlocked: false } },
       );
@@ -283,7 +283,7 @@ export class AdminService {
 
   async getAllUsers(@Res() res: Response) {
     try {
-      const user = await this.userModel.find({});
+      const user = await this._userModel.find({});
       return user;
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });
@@ -292,11 +292,11 @@ export class AdminService {
 
   async blockhost(id: string, @Res() res: Response) {
     try {
-      const user = await this.hostModel.findById({ _id: id });
+      const user = await this._hostModel.findById({ _id: id });
       if (!user) {
         throw new UnauthorizedException('No user found');
       }
-      await this.hostModel.findByIdAndUpdate(
+      await this._hostModel.findByIdAndUpdate(
         { _id: id },
         { $set: { isBlocked: true } },
       );
@@ -308,11 +308,11 @@ export class AdminService {
 
   async unblockhost(id: string, @Res() res: Response) {
     try {
-      const user = await this.hostModel.findById({ _id: id });
+      const user = await this._hostModel.findById({ _id: id });
       if (!user) {
         throw new UnauthorizedException('No user found');
       }
-      await this.hostModel.findByIdAndUpdate(
+      await this._hostModel.findByIdAndUpdate(
         { _id: id },
         { $set: { isBlocked: false } },
       );
@@ -324,7 +324,7 @@ export class AdminService {
 
   async getAllHosts(@Res() res: Response) {
     try {
-      const host = await this.hostModel.find({});
+      const host = await this._hostModel.find({});
       return host;
     } catch (err) {
       res.status(500).json({ message: 'Internal Server Error' });
@@ -333,8 +333,8 @@ export class AdminService {
 
   async verifyHost(id: any, @Res() res: Response) {
     try {
-      const hostData = await this.hostModel.findOne({ _id: id });
-      await this.hostModel.findByIdAndUpdate(
+      const hostData = await this._hostModel.findOne({ _id: id });
+      await this._hostModel.findByIdAndUpdate(
         { _id: id },
         { $set: { isVerified: true } },
       );
@@ -346,7 +346,7 @@ export class AdminService {
   }
 
   async sendVerificationMail(name: string, email: string) {
-    return this.mailService.sendMail({
+    return this._mailService.sendMail({
       to: email,
       from: process.env.DEV_MAIL,
       subject: 'WheelsOnDemand Email Verification',
@@ -378,9 +378,9 @@ export class AdminService {
   async hostNotVerified(id: any, issue: any, @Res() res: Response) {
     try {
       console.log(id, issue.issue, 'from service');
-      const hostData = await this.hostModel.findOne({ _id: id });
+      const hostData = await this._hostModel.findOne({ _id: id });
       console.log(hostData);
-      // await this.hostModel.findOneAndDelete({ _id: id });
+      // await this._hostModel.findOneAndDelete({ _id: id });
       await this.sendNotVerificationMail(
         hostData.name,
         hostData.email,
@@ -393,7 +393,7 @@ export class AdminService {
   }
 
   async sendNotVerificationMail(name: string, email: string, issue: string) {
-    return this.mailService.sendMail({
+    return this._mailService.sendMail({
       to: email,
       from: process.env.DEV_MAIL,
       subject: 'WheelsOnDemand Email Verification',
@@ -434,8 +434,8 @@ export class AdminService {
       const { name, brand, model, transmission, fuel, price, location } =
         createVehicle;
       const cookie = req.cookies['jwtAdmin'];
-      const claims = this.jwtservice.verify(cookie);
-      const newVehicle = await this.vehicleModel.create({
+      const claims = this._jwtservice.verify(cookie);
+      const newVehicle = await this._vehicleModel.create({
         name,
         transmission,
         model,
@@ -456,7 +456,7 @@ export class AdminService {
   async uploadVehicleImage(files: any, @Res() res: Response, id?: string) {
     try {
       for (const f of files) {
-        await this.vehicleModel.findOneAndUpdate(
+        await this._vehicleModel.findOneAndUpdate(
           { _id: id },
           { $push: { images: f.filename } },
         );
@@ -470,7 +470,7 @@ export class AdminService {
 
   async uploadVehicleDoc(doc: any, @Res() res: Response, id?: string) {
     try {
-      await this.vehicleModel.findOneAndUpdate(
+      await this._vehicleModel.findOneAndUpdate(
         { _id: id },
         { $set: { document: doc.filename } },
       );
@@ -486,7 +486,7 @@ export class AdminService {
       const perPage = 3;
       const currPage = Number(page) || 1;
       const skip = perPage * (currPage - 1);
-      const vehicles = await this.vehicleModel
+      const vehicles = await this._vehicleModel
         .find({})
         .populate('createdBy')
         .limit(perPage)
@@ -500,7 +500,7 @@ export class AdminService {
   async pagination(@Res() res: Response) {
     try {
       const perPage = 3;
-      const count = await this.vehicleModel.countDocuments();
+      const count = await this._vehicleModel.countDocuments();
       const totalPage = Math.ceil(count / perPage);
       res.status(200).json({ totalPage });
     } catch (err) {
@@ -510,11 +510,11 @@ export class AdminService {
 
   async verifyHostVehicle(@Res() res: Response, vid: string, hid: string) {
     try {
-      await this.vehicleModel.findByIdAndUpdate(
+      await this._vehicleModel.findByIdAndUpdate(
         { _id: vid },
         { $set: { isVerified: true } },
       );
-      const hostData = await this.hostModel.findOne({ _id: hid });
+      const hostData = await this._hostModel.findOne({ _id: hid });
       await this.vehicleVerifiedMail(hostData.email, hostData.name);
       res.status(200).json({ message: 'Success' });
     } catch (err) {
@@ -523,7 +523,7 @@ export class AdminService {
   }
 
   async vehicleVerifiedMail(email: string, name: string) {
-    return this.mailService.sendMail({
+    return this._mailService.sendMail({
       to: email,
       from: process.env.DEV_MAIL,
       subject: 'WheelsOnDemand New Vehicle Request Verification',
@@ -557,7 +557,7 @@ export class AdminService {
 
   async rejectHostVehicle(@Res() res: Response, id: string, issue: string) {
     try {
-      const hostData = await this.hostModel.findOne({ _id: id });
+      const hostData = await this._hostModel.findOne({ _id: id });
       await this.vehicleRejectedMail(hostData.email, hostData.name, issue);
       res.status(200).json({ message: 'Success' });
     } catch (err) {
@@ -566,7 +566,7 @@ export class AdminService {
   }
 
   async vehicleRejectedMail(email: string, name: string, issue: string) {
-    return this.mailService.sendMail({
+    return this._mailService.sendMail({
       to: email,
       from: process.env.DEV_MAIL,
       subject: 'WheelsOnDemand New Vehicle Request Review',
@@ -609,7 +609,7 @@ export class AdminService {
       // console.log(files, editVehicle);
       const { name, brand, model, transmission, fuel, price, location } =
         editVehicle;
-      await this.vehicleModel.findOneAndUpdate(
+      await this._vehicleModel.findOneAndUpdate(
         { _id: id },
         { $set: { name, brand, model, transmission, fuel, price, location } },
       );
@@ -626,9 +626,9 @@ export class AdminService {
 
   async deleteImage(@Res() res: Response, id: string, file: string) {
     try {
-      const vehicleData = await this.vehicleModel.findOne({ _id: id });
+      const vehicleData = await this._vehicleModel.findOne({ _id: id });
       if (vehicleData.images.length > 1) {
-        await this.vehicleModel.findByIdAndUpdate(
+        await this._vehicleModel.findByIdAndUpdate(
           { _id: id },
           { $pull: { images: file } },
         );
@@ -652,7 +652,7 @@ export class AdminService {
 
   async deleteVehicle(@Res() res: Response, id: string) {
     try {
-      await this.vehicleModel.findOneAndDelete({ _id: id });
+      await this._vehicleModel.findOneAndDelete({ _id: id });
       res.status(200).json({ message: 'Success' });
     } catch (err) {
       res.status(500).json({ message: 'Internal Error' });
@@ -661,7 +661,7 @@ export class AdminService {
 
   async getAllBookings(@Res() res: Response) {
     try {
-      const bookings = await this.bookingModel
+      const bookings = await this._bookingModel
         .find({})
         .populate({
           path: 'vehicleId',

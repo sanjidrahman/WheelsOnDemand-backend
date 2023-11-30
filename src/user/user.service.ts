@@ -486,6 +486,7 @@ export class UserService {
         res.status(200).json({ message: 'Success' });
       } else {
         const booking = await this._bookingModel.findOne({ _id: bookId });
+        console.log(booking);
         // instance.payments
         //   .refund(booking.razorId, {
         //     amount: refund.toString(),

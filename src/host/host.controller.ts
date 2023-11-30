@@ -30,19 +30,19 @@ import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
 @Controller('host')
 export class HostController {
-  constructor(private readonly hostService: HostService) {}
+  constructor(private readonly _hostService: HostService) {}
 
   @Post('/signup')
   create(
     @Body() createHostDto: CreateHostDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return this.hostService.create(createHostDto, res);
+    return this._hostService.create(createHostDto, res);
   }
 
   @Post('verify-otp')
   verify(@Body() otp: any, @Res({ passthrough: true }) res: Response) {
-    return this.hostService.otpverify(otp, res);
+    return this._hostService.otpverify(otp, res);
   }
 
   @Post('login')
@@ -50,22 +50,22 @@ export class HostController {
     @Body() hostlogin: LoginHostDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return this.hostService.login(hostlogin, res);
+    return this._hostService.login(hostlogin, res);
   }
 
   @Get('host-details')
   getHostDetails(@Req() req: Request, @Res() res: Response) {
-    this.hostService.hostdetails(req, res);
+    this._hostService.hostdetails(req, res);
   }
 
   @Get('dashboard')
   getDashboard(@Res() res: Response, @Req() req: Request) {
-    return this.hostService.dashboard(res, req);
+    return this._hostService.dashboard(res, req);
   }
 
   @Get('hosts')
   findAll(@Res({ passthrough: true }) res: Response) {
-    return this.hostService.getAllHost(res);
+    return this._hostService.getAllHost(res);
   }
 
   @Patch('update-host')
@@ -74,12 +74,12 @@ export class HostController {
     @Res() res: Response,
     @Req() req: Request,
   ) {
-    return this.hostService.updatehost(updatehostdto, res, req);
+    return this._hostService.updatehost(updatehostdto, res, req);
   }
 
   @Patch('change-pass')
   changepass(@Body() data: any, @Res() res: Response, @Req() req: Request) {
-    return this.hostService.changepass(data, res, req);
+    return this._hostService.changepass(data, res, req);
   }
 
   @Post('/upload-doc/:id')
@@ -97,7 +97,7 @@ export class HostController {
     @Res() res: Response,
     @Param() id: any,
   ) {
-    return this.hostService.uplaodDoc(file, res, id.id);
+    return this._hostService.uplaodDoc(file, res, id.id);
   }
 
   @Post('/upload-profile')
@@ -115,7 +115,7 @@ export class HostController {
     @Res() res: Response,
     @Req() req: Request,
   ) {
-    return this.hostService.uplaodProfile(file, res, req);
+    return this._hostService.uplaodProfile(file, res, req);
   }
 
   @Get('host-vehicles')
@@ -124,7 +124,7 @@ export class HostController {
     @Req() req: Request,
     @Query('page') page?: number,
   ) {
-    return this.hostService.hostvehicles(res, req, page);
+    return this._hostService.hostvehicles(res, req, page);
   }
 
   @Post('add-vehicle')
@@ -149,7 +149,7 @@ export class HostController {
     @Res() res: Response,
     @Req() req: Request,
   ) {
-    return this.hostService.addVehicle(files, createvehicledto, res, req);
+    return this._hostService.addVehicle(files, createvehicledto, res, req);
   }
 
   @Patch('edit-vehicle/:id')
@@ -174,12 +174,12 @@ export class HostController {
     @Res() res: Response,
     @UploadedFiles() files?: Array<Express.Multer.File>,
   ) {
-    return this.hostService.editVehicle(files, editVehicle, res, id);
+    return this._hostService.editVehicle(files, editVehicle, res, id);
   }
 
   @Get('vehicle-details/:id')
   vehicleDetails(@Res() res: Response, @Param('id') v_id: string) {
-    this.hostService.getVehicleDetails(res, v_id);
+    this._hostService.getVehicleDetails(res, v_id);
   }
 
   @Patch('delete-image/:id')
@@ -188,17 +188,17 @@ export class HostController {
     @Param('id') id: any,
     @Query('file') file: string,
   ) {
-    return this.hostService.deleteImage(res, id, file);
+    return this._hostService.deleteImage(res, id, file);
   }
 
   @Delete('delete-vehicle/:id')
   deletevehicle(@Res() res: Response, @Param('id') id: string) {
-    return this.hostService.deleteVehicle(res, id);
+    return this._hostService.deleteVehicle(res, id);
   }
 
   @Get('host-bookings')
   getHostBooking(@Res() res: Response, @Req() req: Request) {
-    return this.hostService.hostBooking(res, req);
+    return this._hostService.hostBooking(res, req);
   }
 
   @Patch('edit-booking-status/:id')
@@ -207,12 +207,12 @@ export class HostController {
     @Param('id') b_id: string,
     @Body('status') status: string,
   ) {
-    this.hostService.editBookingStatus(res, b_id, status);
+    this._hostService.editBookingStatus(res, b_id, status);
   }
 
   @Post('forgot-password')
   forgotpass(@Res() res: Response, @Body('email') email: string) {
-    return this.hostService.forgotpassword(res, email);
+    return this._hostService.forgotpassword(res, email);
   }
 
   @Patch('reset-password/:h_id')
@@ -222,11 +222,11 @@ export class HostController {
     @Body('newpass') newpassword: string,
     @Body('confirmpass') confirmpass: string,
   ) {
-    return this.hostService.resetPass(res, hostId, newpassword, confirmpass);
+    return this._hostService.resetPass(res, hostId, newpassword, confirmpass);
   }
 
   @Post('logout')
   logoutUser(@Req() req: Request, @Res() res: Response) {
-    return this.hostService.logout(req, res);
+    return this._hostService.logout(req, res);
   }
 }

@@ -28,46 +28,46 @@ import { UpdateVehicleDto } from './dto/edit-vehicle.dto';
 
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly _adminService: AdminService) {}
 
   @Post('/login')
   login(@Body() logindto: AdminLoginDto, @Res() res: Response) {
-    this.adminService.adminLogin(logindto, res);
+    this._adminService.adminLogin(logindto, res);
   }
 
   // @Post('/register')
   // register(@Body() logindto: AdminLoginDto, @Res() res: Response) {
-  //   this.adminService.signup(logindto, res);
+  //   this._adminService.signup(logindto, res);
   // }
 
   @Patch('user/block/:id')
   blockuser(@Param('id') id: string, @Res() res: Response) {
-    return this.adminService.blockuser(id, res);
+    return this._adminService.blockuser(id, res);
   }
 
   @Patch('user/unblock/:id')
   unblockuser(@Param('id') id: string, @Res() res: Response) {
-    return this.adminService.unblockuser(id, res);
+    return this._adminService.unblockuser(id, res);
   }
 
   @Get('users')
   users(@Res({ passthrough: true }) res: Response) {
-    return this.adminService.getAllUsers(res);
+    return this._adminService.getAllUsers(res);
   }
 
   @Patch('host/block/:id')
   blockhost(@Param('id') id: string, @Res() res: Response) {
-    return this.adminService.blockhost(id, res);
+    return this._adminService.blockhost(id, res);
   }
 
   @Patch('host/unblock/:id')
   unblockhost(@Param('id') id: string, @Res() res: Response) {
-    return this.adminService.unblockhost(id, res);
+    return this._adminService.unblockhost(id, res);
   }
 
   @Get('hosts')
   hosts(@Res({ passthrough: true }) res: Response) {
-    return this.adminService.getAllHosts(res);
+    return this._adminService.getAllHosts(res);
   }
 
   @Get('getFile/:filename')
@@ -78,7 +78,7 @@ export class AdminController {
 
   @Post('host/verify-host/:id')
   verifyHost(@Param('id') id: any, @Res() res: Response) {
-    return this.adminService.verifyHost(id, res);
+    return this._adminService.verifyHost(id, res);
   }
 
   @Post('host/host-notverify/:id')
@@ -87,12 +87,12 @@ export class AdminController {
     @Body() issue: string,
     @Res() res: Response,
   ) {
-    return this.adminService.hostNotVerified(id, issue, res);
+    return this._adminService.hostNotVerified(id, issue, res);
   }
 
   @Get('vehicles')
   allVehicles(@Res() res: Response, @Query('page') page?: number) {
-    return this.adminService.getAllVehicles(res, page);
+    return this._adminService.getAllVehicles(res, page);
   }
 
   @Post('add-vehicle')
@@ -118,7 +118,7 @@ export class AdminController {
     @Res() res: Response,
     @Req() req: Request,
   ) {
-    return this.adminService.addVehicle(files, createVehicle, res, req);
+    return this._adminService.addVehicle(files, createVehicle, res, req);
   }
 
   @Patch('verify-host-vehicle')
@@ -127,7 +127,7 @@ export class AdminController {
     @Query('vehicleid') vid: string,
     @Query('hostid') hid: string,
   ) {
-    this.adminService.verifyHostVehicle(res, vid, hid);
+    this._adminService.verifyHostVehicle(res, vid, hid);
   }
 
   @Post('reject-host-vehicle/:id')
@@ -136,7 +136,7 @@ export class AdminController {
     @Body() issue: any,
     @Param('id') id: string,
   ) {
-    this.adminService.rejectHostVehicle(res, id, issue.issue);
+    this._adminService.rejectHostVehicle(res, id, issue.issue);
   }
 
   @Patch('edit-vehicle/:id')
@@ -162,7 +162,7 @@ export class AdminController {
     @UploadedFiles() files?: Array<Express.Multer.File>,
   ) {
     console.log(editVehicle, files, 'HII DAAA');
-    return this.adminService.editVehicle(files, editVehicle, res, id);
+    return this._adminService.editVehicle(files, editVehicle, res, id);
   }
 
   @Patch('delete-image/:id')
@@ -171,17 +171,17 @@ export class AdminController {
     @Param('id') id: any,
     @Query('file') file: string,
   ) {
-    return this.adminService.deleteImage(res, id, file);
+    return this._adminService.deleteImage(res, id, file);
   }
 
   @Delete('delete-vehicle/:id')
   deletevehicle(@Res() res: Response, @Param('id') id: string) {
-    return this.adminService.deleteVehicle(res, id);
+    return this._adminService.deleteVehicle(res, id);
   }
 
   @Get('pagination')
   pagination(@Res() res: Response) {
-    return this.adminService.pagination(res);
+    return this._adminService.pagination(res);
   }
 
   @Post('/upload-single')
@@ -204,16 +204,16 @@ export class AdminController {
 
   @Get('all-bookings')
   getBooking(@Res() res: Response) {
-    return this.adminService.getAllBookings(res);
+    return this._adminService.getAllBookings(res);
   }
 
   @Get('dashboard')
   getDashboard(@Res() res: Response) {
-    return this.adminService.dashboard(res);
+    return this._adminService.dashboard(res);
   }
 
   @Post('logout')
   logoutUser(@Req() req: Request, @Res() res: Response) {
-    return this.adminService.logout(req, res);
+    return this._adminService.logout(req, res);
   }
 }
