@@ -10,7 +10,7 @@ export class Vehicles extends Document {
   price: number;
 
   @Prop({ type: Number })
-  model: number;
+  make: number;
 
   @Prop()
   transmission: string;
