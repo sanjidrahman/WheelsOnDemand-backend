@@ -11,7 +11,9 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 declare const module: any;
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: true,
+  });
   const options = new DocumentBuilder()
     .setTitle('WheelsOnDemand API Doc')
     .setDescription(
