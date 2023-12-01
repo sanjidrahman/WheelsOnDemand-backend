@@ -556,7 +556,7 @@ export class HostService {
         brand,
         fuel,
         transmission,
-        model,
+        make,
         price,
         isVerified,
         location,
@@ -568,7 +568,7 @@ export class HostService {
         brand,
         fuel,
         transmission,
-        model,
+        make,
         price,
         location,
         createdBy: claims.id,
@@ -653,11 +653,11 @@ export class HostService {
     id: string,
   ) {
     try {
-      const { name, brand, model, transmission, fuel, price, location } =
+      const { name, brand, make, transmission, fuel, price, location } =
         editVehicle;
       await this._vehicleModel.findOneAndUpdate(
         { _id: id },
-        { $set: { name, brand, model, transmission, fuel, price, location } },
+        { $set: { name, brand, make, transmission, fuel, price, location } },
       );
       if (files) {
         if (files.files) await this.uploadVehicleImage(files.files, res, id);

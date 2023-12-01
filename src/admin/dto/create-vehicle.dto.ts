@@ -17,7 +17,7 @@ export class CreateVehicleDto {
   transmission: string;
 
   @IsNotEmpty()
-  model: number;
+  make: number;
 
   @IsNotEmpty()
   price: number;

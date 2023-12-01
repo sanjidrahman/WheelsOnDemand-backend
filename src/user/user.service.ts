@@ -296,7 +296,6 @@ export class UserService {
       const count = await this._vehicleModel
         .find({ isVerified: true })
         .countDocuments();
-      console.log(count);
       const totalPage = Math.ceil(count / perPage);
       // console.log(vehicles, totalPage);
       res.status(200).send({ vehicles, totalPage });

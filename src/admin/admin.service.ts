@@ -431,14 +431,14 @@ export class AdminService {
     @Req() req: Request,
   ) {
     try {
-      const { name, brand, model, transmission, fuel, price, location } =
+      const { name, brand, make, transmission, fuel, price, location } =
         createVehicle;
       const cookie = req.cookies['jwtAdmin'];
       const claims = this._jwtservice.verify(cookie);
       const newVehicle = await this._vehicleModel.create({
         name,
         transmission,
-        model,
+        make,
         fuel,
         brand,
         price,
@@ -607,11 +607,11 @@ export class AdminService {
   ) {
     try {
       // console.log(files, editVehicle);
-      const { name, brand, model, transmission, fuel, price, location } =
+      const { name, brand, make, transmission, fuel, price, location } =
         editVehicle;
       await this._vehicleModel.findOneAndUpdate(
         { _id: id },
-        { $set: { name, brand, model, transmission, fuel, price, location } },
+        { $set: { name, brand, make, transmission, fuel, price, location } },
       );
       if (files) {
         if (files.files) await this.uploadVehicleImage(files.files, res, id);
