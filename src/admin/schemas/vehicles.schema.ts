@@ -9,7 +9,7 @@ export class Vehicles extends Document {
   @Prop()
   price: number;
 
-  @Prop()
+  @Prop({ type: Number })
   model: number;
 
   @Prop()
