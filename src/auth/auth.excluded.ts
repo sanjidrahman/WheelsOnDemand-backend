@@ -13,4 +13,5 @@ export const exclude = [
   '/admin/login',
   '/admin/getFile/:filename',
   '/webhook',
+  '/',
 ];
