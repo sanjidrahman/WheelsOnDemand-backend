@@ -36,11 +36,11 @@ async function bootstrap() {
       saveUninitialized: false,
     }),
   );
-  // const corsOptions: CorsOptions = {
-  //   origin: ['https://s3.wheelsondemand.online'],
-  //   credentials: true,
-  // };
-  app.enableCors();
+  const corsOptions: CorsOptions = {
+    origin: ['https://s3.wheelsondemand.online'],
+    credentials: true,
+  };
+  app.enableCors(corsOptions);
   app.use(cookieParser());
   await app.listen(port);
 
