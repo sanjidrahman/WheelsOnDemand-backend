@@ -161,7 +161,6 @@ export class AdminController {
     @Res() res: Response,
     @UploadedFiles() files?: Array<Express.Multer.File>,
   ) {
-    console.log(editVehicle, files, 'HII DAAA');
     return this._adminService.editVehicle(files, editVehicle, res, id);
   }
 

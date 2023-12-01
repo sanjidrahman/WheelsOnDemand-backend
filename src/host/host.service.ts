@@ -615,14 +615,12 @@ export class HostService {
       const vehicle = await this._vehicleModel
         .find({
           createdBy: claims.id,
-          isVerified: true,
         })
         .limit(perPage)
         .skip(skip);
       const count = await this._vehicleModel
         .find({
           createdBy: claims.id,
-          isVerified: true,
         })
         .countDocuments();
       const totalPage = Math.ceil(count / perPage);
