@@ -18,7 +18,7 @@ async function bootstrap() {
       `Welcome to the WheelsOnDemand API Documentation! This document provides detailed information on the available endpoints, request methods, parameters, and response formats for the WheelsOnDemand API.`,
     )
     .setVersion('1.0')
-    .addServer('http://localhost:3000/', 'Local environment')
+    .addServer('https://wheelsondemad.online/', 'Local environment')
     .addTag('WheelsOnDemand')
     .build();
 
@@ -37,7 +37,7 @@ async function bootstrap() {
     }),
   );
   const corsOptions: CorsOptions = {
-    origin: ['http://localhost:4200'],
+    origin: ['http://localhost:4200', 'https://s3.wheelsondemand.online'],
     credentials: true,
   };
   app.enableCors(corsOptions);

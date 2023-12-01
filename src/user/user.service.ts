@@ -15,7 +15,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { Booking } from './schemas/bookings.schema';
 import * as moment from 'moment';
 import { UpdateUserDto } from './dto/edit-user.dto';
-import Razorpay from 'razorpay';
+// import Razorpay from 'razorpay';
 
 // const instance = new Razorpay({
 //   key_id: process.env.RAZOR_KEY_ID,

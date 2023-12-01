@@ -66,7 +66,6 @@ export class AuthController {
     @Body('choice') choicedto: ChoiseDto,
     @Body('placesInRange') nearBy: string[],
   ) {
-    console.log(choicedto, nearBy);
     return this.userservice.storeChoices(res, req, choicedto, nearBy);
   }
 
