@@ -36,11 +36,8 @@ export class HostService {
   async create(createHostDto: CreateHostDto, @Res() res: Response) {
     try {
       const { name, email, password, phone, confirmPass } = createHostDto;
-      console.log(name, email, password, phone, confirmPass);
       const existmail = await this._hostModel.findOne({ email: email });
-      console.log(existmail);
       const existNumber = await this._hostModel.findOne({ phone: phone });
-      console.log(existNumber);
       if (existmail) {
         return res.status(400).json({ message: 'Email is already registered' });
       }
@@ -57,10 +54,8 @@ export class HostService {
           lowerCaseAlphabets: false,
           specialChars: false,
         });
-        console.log(this.otpgenerated);
         await this.sendMail(name, email, this.otpgenerated);
         const hashpass = await bcrypt.hash(password, 10);
-        console.log(hashpass);
         this.tempHost = {
           name: name,
           phone: phone,
@@ -68,7 +63,6 @@ export class HostService {
           password: hashpass,
         };
       }
-      console.log(this.tempHost);
 
       res.status(200).json({ message: 'Success' });
     } catch (err) {
@@ -187,7 +181,6 @@ export class HostService {
       await this.sendForgotPassMail(res, existEmail.email, existEmail._id);
       res.status(HttpStatus.OK).json({ message: 'Success' });
     } catch (err) {
-      console.log(err.message);
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
@@ -211,7 +204,6 @@ export class HostService {
       `,
       });
     } catch (err) {
-      console.log(err.message);
       return res.status(500).json({ message: err.message });
     }
   }
@@ -223,7 +215,6 @@ export class HostService {
     confirmpassword: string,
   ) {
     try {
-      console.log(hostId);
       if (newpassword !== confirmpassword) {
         return res
           .status(HttpStatus.NOT_ACCEPTABLE)
@@ -419,7 +410,6 @@ export class HostService {
         latestOrders,
       });
     } catch (err) {
-      console.log(err.message);
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({ message: 'Internal Server Error' });
@@ -501,7 +491,6 @@ export class HostService {
         { _id: claims.id },
         { $set: { name: name, phone: phone } },
       );
-      console.log(updatehostdto);
       return res.status(200).json({ message: 'Success' });
     } catch (err) {
       res
@@ -604,7 +593,6 @@ export class HostService {
 
   async uploadVehicleDoc(doc: any, @Res() res: Response, id?: string) {
     try {
-      console.log(doc);
       await this._vehicleModel.findOneAndUpdate(
         { _id: id },
         { $set: { document: doc.filename } },
@@ -681,9 +669,9 @@ export class HostService {
         );
         fs.unlink(`./files/${file}`, (err) => {
           if (err) {
-            console.log('somethiing went wrong', err);
+            // console.log('somethiing went wrong', err);
           } else {
-            console.log('unlinked');
+            // console.log('unlinked');
           }
         });
       } else {

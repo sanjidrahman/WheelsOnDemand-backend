@@ -377,9 +377,7 @@ export class AdminService {
 
   async hostNotVerified(id: any, issue: any, @Res() res: Response) {
     try {
-      console.log(id, issue.issue, 'from service');
       const hostData = await this._hostModel.findOne({ _id: id });
-      console.log(hostData);
       // await this._hostModel.findOneAndDelete({ _id: id });
       await this.sendNotVerificationMail(
         hostData.name,
@@ -463,7 +461,6 @@ export class AdminService {
       }
       return;
     } catch (err) {
-      console.log(err.messsage, 'UPLOAD DOC');
       res.status(500).json({ message: 'Internal Server Error' });
     }
   }
@@ -476,7 +473,6 @@ export class AdminService {
       );
       return;
     } catch (err) {
-      console.log(err.messsage, 'UPLOAD VEHICLE');
       res.status(500).json({ message: 'Internal Server Error' });
     }
   }
@@ -619,7 +615,6 @@ export class AdminService {
       }
       res.status(200).json({ message: 'Success' });
     } catch (err) {
-      console.log(err.message, 'EDIT VEHCICLE');
       res.status(500).json({ message: 'Internal Error' });
     }
   }
@@ -634,9 +629,9 @@ export class AdminService {
         );
         fs.unlink(`./files/${file}`, (err) => {
           if (err) {
-            console.log('somethiing went wrong', err);
+            // console.log('somethiing went wrong', err);
           } else {
-            console.log('unlinked');
+            // console.log('unlinked');
           }
         });
       } else {

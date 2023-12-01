@@ -70,7 +70,6 @@ export class UserService {
         };
       }
 
-      console.log(this.otpgenetated);
       res.status(200).json({ message: 'Success' });
     } catch (error) {
       if (error.code === 11000) {
@@ -195,7 +194,6 @@ export class UserService {
       if (req.body.userId) {
         const userId = req.body.userId;
         const { startDate, endDate, pickup, dropoff } = choisedto;
-        console.log(userId, startDate, endDate, pickup, dropoff);
         const updatedStartDate = moment(startDate).format('YYYY-MM-DD');
         const updatedEndDate = moment(endDate).format('YYYY-MM-DD');
         const updateChoice = {
@@ -215,7 +213,6 @@ export class UserService {
       }
       // res.status(200).json({ message: 'Success' });
     } catch (err) {
-      console.log(err.message);
       return res.status(500).json({ message: 'Internal Servet Error' });
     }
   }
@@ -320,13 +317,11 @@ export class UserService {
         paymentMethod,
       } = createbookingdto;
       if (paymentMethod == 'wallet') {
-        console.log(total);
         await this._userModel.findOneAndUpdate(
           { _id: userId },
           { $inc: { wallet: -total } },
         );
       } else if (paymentMethod == 'razor n wallet') {
-        console.log(total, grandTotal);
         const remain = total - grandTotal;
         await this._userModel.findOneAndUpdate(
           { _id: userId },
@@ -366,7 +361,6 @@ export class UserService {
 
       return res.status(200).json({ bookingId: bookingDetails._id });
     } catch (err) {
-      console.log(err.message);
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
@@ -535,14 +529,12 @@ export class UserService {
       );
       res.status(200).json({ message: 'Success' });
     } catch (err) {
-      console.log(err.message);
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
 
   async forgotpassword(@Res() res: Response, email: string) {
     try {
-      console.log(email);
       const existEmail = await this._userModel.findOne({ email: email });
       if (!existEmail)
         res
@@ -575,7 +567,6 @@ export class UserService {
       `,
       });
     } catch (err) {
-      console.log(err.message);
       return res.status(500).json({ message: err.message });
     }
   }
@@ -614,7 +605,6 @@ export class UserService {
       const hasCompletedBooking = !!booking;
       res.status(HttpStatus.OK).json({ hasCompletedBooking });
     } catch (err) {
-      console.log(err.message, 'TTTT');
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
