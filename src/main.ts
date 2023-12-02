@@ -39,8 +39,9 @@ async function bootstrap() {
     }),
   );
   const corsOptions: CorsOptions = {
-    origin: '*',
+    origin: ['http://localhost:4200', 'https://s3.wheelsondemand.online'],
     credentials: true,
+    preflightContinue: true,
   };
   app.enableCors(corsOptions);
   app.use(cookieParser());
