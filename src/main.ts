@@ -4,6 +4,7 @@ import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.int
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as session from 'express-session';
 import * as cookieParser from 'cookie-parser';
+import * as express from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import * as path from 'path';
@@ -29,6 +30,8 @@ async function bootstrap() {
 
   app.useStaticAssets(path.join(__dirname, '../files'));
   app.useGlobalPipes(new ValidationPipe({ stopAtFirstError: true }));
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
   const configService = app.get(ConfigService);
   const port = configService.get('PORT');
   app.use(
