@@ -233,8 +233,7 @@ export class HostService {
 
   async dashboard(@Res() res: Response, @Req() req: Request) {
     try {
-      const cookie = req.cookies['jwtHost'];
-      const claims = this._jwtservice.verify(cookie);
+      const hostId = req.body.userId;
       const hostRevenue = await this._bookingModel.aggregate([
         {
           $lookup: {
@@ -249,7 +248,7 @@ export class HostService {
         },
         {
           $match: {
-            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(claims.id),
+            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(hostId),
             // status: 'completed',
           },
         },
@@ -287,7 +286,7 @@ export class HostService {
         },
         {
           $match: {
-            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(claims.id),
+            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(hostId),
             // status: 'completed',
           },
         },
@@ -326,7 +325,7 @@ export class HostService {
         },
         {
           $match: {
-            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(claims.id),
+            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(hostId),
             status: 'Booked',
           },
         },
@@ -377,7 +376,7 @@ export class HostService {
         },
         {
           $match: {
-            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(claims.id),
+            'vehicleDetails.createdBy': new mongoose.Types.ObjectId(hostId),
             // status: 'completed',
           },
         },
@@ -451,10 +450,9 @@ export class HostService {
         originalname: file.originalname,
         filename: file.filename,
       };
-      const cookie = req.cookies['jwtHost'];
-      const claims = this._jwtservice.verify(cookie);
+      const hostId = req.body.userId;
       const userup = await this._hostModel.updateOne(
-        { _id: claims.id },
+        { _id: hostId },
         { $set: { profile: response.filename } },
       );
       return res.status(200).json({ userup, message: 'Success' });
@@ -467,9 +465,8 @@ export class HostService {
 
   async hostdetails(@Req() req: Request, @Res() res: Response) {
     try {
-      const cookie = req.cookies['jwtHost'];
-      const claims = this._jwtservice.verify(cookie);
-      const host = await this._hostModel.findById({ _id: claims.id });
+      const hostId = req.body.userId;
+      const host = await this._hostModel.findById({ _id: hostId });
       res.send(host);
     } catch (err) {
       res
@@ -485,10 +482,9 @@ export class HostService {
   ) {
     try {
       const { name, phone } = updatehostdto;
-      const cookie = req.cookies['jwtHost'];
-      const claims = this._jwtservice.verify(cookie);
+      const hostId = req.body.userId;
       await this._hostModel.findOneAndUpdate(
-        { _id: claims.id },
+        { _id: hostId },
         { $set: { name: name, phone: phone } },
       );
       return res.status(200).json({ message: 'Success' });
@@ -502,9 +498,8 @@ export class HostService {
   async changepass(data: any, @Res() res: Response, @Req() req: Request) {
     try {
       const { oldPass, password, confirmPass } = data;
-      const cookie = req.cookies['jwtHost'];
-      const claims = this._jwtservice.verify(cookie);
-      const hostData = await this._hostModel.findOne({ _id: claims.id });
+      const hostId = req.body.userId;
+      const hostData = await this._hostModel.findOne({ _id: hostId });
       const passMatch = await bcrypt.compare(oldPass, hostData.password);
       if (password !== confirmPass) {
         return res
@@ -522,7 +517,7 @@ export class HostService {
       }
       const hashpass = await bcrypt.hash(password, 10);
       await this._hostModel.findOneAndUpdate(
-        { _id: claims.id },
+        { _id: hostId },
         { $set: { password: hashpass } },
       );
       return res.status(200).json({ message: 'Success' });
@@ -550,8 +545,7 @@ export class HostService {
         isVerified,
         location,
       } = createvehicledto;
-      const cookie = req.cookies['jwtHost'];
-      const claims = this._jwtservice.verify(cookie);
+      const hostId = req.body.userId;
       const newCar = await this._vehicleModel.create({
         name,
         brand,
@@ -560,7 +554,7 @@ export class HostService {
         make,
         price,
         location,
-        createdBy: claims.id,
+        createdBy: hostId,
         isVerified,
       });
       if (newCar) {
@@ -607,20 +601,19 @@ export class HostService {
 
   async hostvehicles(@Res() res: Response, @Req() req: Request, page: number) {
     try {
-      const cookie = req.cookies['jwtHost'];
-      const claims = this._jwtservice.verify(cookie);
+      const hostId = req.body.userId;
       const perPage = 3;
       const currPage = Number(page) || 1;
       const skip = perPage * (currPage - 1);
       const vehicle = await this._vehicleModel
         .find({
-          createdBy: claims.id,
+          createdBy: hostId,
         })
         .limit(perPage)
         .skip(skip);
       const count = await this._vehicleModel
         .find({
-          createdBy: claims.id,
+          createdBy: hostId,
         })
         .countDocuments();
       const totalPage = Math.ceil(count / perPage);

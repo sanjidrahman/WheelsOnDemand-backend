@@ -174,10 +174,9 @@ export class UserService {
 
   async getUser(@Req() req: Request, @Res() res: Response) {
     try {
-      const cookie = req.cookies['jwt'];
-      const claims = this._jwtservice.verify(cookie);
+      const userId = req.body.userId;
 
-      const user = this._userModel.findById({ _id: claims.id });
+      const user = this._userModel.findById({ _id: userId });
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...data } = (await user).toJSON();
 
@@ -399,10 +398,9 @@ export class UserService {
     file: any,
   ) {
     try {
-      const token = req.cookies['jwt'];
-      const claims = this._jwtservice.verify(token);
+      const userId = req.body.userId;
       await this._userModel.findOneAndUpdate(
-        { _id: claims.id },
+        { _id: userId },
         { $set: { profile: file.filename } },
       );
       res.status(200).json({ message: 'Success' });

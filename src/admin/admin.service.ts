@@ -431,8 +431,7 @@ export class AdminService {
     try {
       const { name, brand, make, transmission, fuel, price, location } =
         createVehicle;
-      const cookie = req.cookies['jwtAdmin'];
-      const claims = this._jwtservice.verify(cookie);
+      const admId = req.body.userId;
       const newVehicle = await this._vehicleModel.create({
         name,
         transmission,
@@ -441,7 +440,7 @@ export class AdminService {
         brand,
         price,
         location,
-        createdBy: claims.id,
+        createdBy: admId,
       });
       await this.uploadVehicleImage(files.files, res, newVehicle._id);
       await this.uploadVehicleDoc(files.doc[0], res, newVehicle._id);
