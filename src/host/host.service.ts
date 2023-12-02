@@ -132,7 +132,7 @@ export class HostService {
     try {
       const { email, password } = hostlogindto;
       const hostData = await this._hostModel.findOne({ email: email });
-      console.log(stringify(hostData, null, 2));
+      // console.log(stringify(hostData, null, 2));
       if (hostData) {
         if (!hostData.isBlocked) {
           if (hostData.isVerified) {
