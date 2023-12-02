@@ -92,8 +92,9 @@ export class UserService {
           const payload = { id: user._id, role: 'user' };
           const token = this._jwtservice.sign(payload);
           res.cookie('jwt', token, {
-            httpOnly: true,
+            httpOnly: false,
             maxAge: 24 * 60 * 60 * 1000,
+            secure: true,
           });
           res.status(200).json({ token, message: 'Success' });
         } else {
@@ -137,8 +138,9 @@ export class UserService {
       const payload = { id: user._id, role: 'user' };
       const token = this._jwtservice.sign(payload);
       res.cookie('jwt', token, {
-        httpOnly: true,
+        httpOnly: false,
         maxAge: 24 * 60 * 60 * 1000,
+        secure: true,
       });
 
       return { token };
@@ -159,8 +161,9 @@ export class UserService {
       } else {
         const token = this._jwtservice.sign({ id: userData._id, role: 'user' });
         res.cookie('jwt', token, {
-          httpOnly: true,
+          httpOnly: false,
           maxAge: 24 * 60 * 60 * 1000,
+          secure: true,
         });
         return { token };
       }
