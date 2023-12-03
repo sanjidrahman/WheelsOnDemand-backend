@@ -1,10 +1,4 @@
-import {
-  HttpStatus,
-  Injectable,
-  Req,
-  Res,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { User } from 'src/user/schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -38,7 +32,7 @@ export class AdminService {
     private _mailService: MailerService,
   ) {}
 
-  async adminLogin(logindto: AdminLoginDto, @Res() res: Response) {
+  async adminLogin(logindto: AdminLoginDto, res: Response) {
     try {
       const { email, password } = logindto;
       const user = await this._adminModel.findOne({ email: email });
@@ -88,7 +82,7 @@ export class AdminService {
   //   }
   // }
 
-  async dashboard(@Res() res: Response) {
+  async dashboard(res: Response) {
     try {
       const amountGeneratedEachMonth: number[] = [];
       const currentDate = new Date();
@@ -249,7 +243,7 @@ export class AdminService {
     }
   }
 
-  async blockuser(id: string, @Res() res: Response) {
+  async blockuser(id: string, res: Response) {
     try {
       const user = await this._userModel.findById({ _id: id });
       if (!user) {
@@ -265,7 +259,7 @@ export class AdminService {
     }
   }
 
-  async unblockuser(id: string, @Res() res: Response) {
+  async unblockuser(id: string, res: Response) {
     try {
       const user = await this._userModel.findById({ _id: id });
       if (!user) {
@@ -281,7 +275,7 @@ export class AdminService {
     }
   }
 
-  async getAllUsers(@Res() res: Response) {
+  async getAllUsers(res: Response) {
     try {
       const user = await this._userModel.find({});
       return user;
@@ -290,7 +284,7 @@ export class AdminService {
     }
   }
 
-  async blockhost(id: string, @Res() res: Response) {
+  async blockhost(id: string, res: Response) {
     try {
       const user = await this._hostModel.findById({ _id: id });
       if (!user) {
@@ -306,7 +300,7 @@ export class AdminService {
     }
   }
 
-  async unblockhost(id: string, @Res() res: Response) {
+  async unblockhost(id: string, res: Response) {
     try {
       const user = await this._hostModel.findById({ _id: id });
       if (!user) {
@@ -322,7 +316,7 @@ export class AdminService {
     }
   }
 
-  async getAllHosts(@Res() res: Response) {
+  async getAllHosts(res: Response) {
     try {
       const host = await this._hostModel.find({});
       return host;
@@ -331,7 +325,7 @@ export class AdminService {
     }
   }
 
-  async verifyHost(id: any, @Res() res: Response) {
+  async verifyHost(id: any, res: Response) {
     try {
       const hostData = await this._hostModel.findOne({ _id: id });
       await this._hostModel.findByIdAndUpdate(
@@ -375,7 +369,7 @@ export class AdminService {
     });
   }
 
-  async hostNotVerified(id: any, issue: any, @Res() res: Response) {
+  async hostNotVerified(id: any, issue: any, res: Response) {
     try {
       const hostData = await this._hostModel.findOne({ _id: id });
       // await this._hostModel.findOneAndDelete({ _id: id });
@@ -425,8 +419,8 @@ export class AdminService {
   async addVehicle(
     files: any,
     createVehicle: CreateVehicleDto,
-    @Res() res: Response,
-    @Req() req: Request,
+    res: Response,
+    req: Request,
   ) {
     try {
       const { name, brand, make, transmission, fuel, price, location } =
@@ -450,7 +444,7 @@ export class AdminService {
     }
   }
 
-  async uploadVehicleImage(files: any, @Res() res: Response, id?: string) {
+  async uploadVehicleImage(files: any, res: Response, id?: string) {
     try {
       for (const f of files) {
         await this._vehicleModel.findOneAndUpdate(
@@ -464,7 +458,7 @@ export class AdminService {
     }
   }
 
-  async uploadVehicleDoc(doc: any, @Res() res: Response, id?: string) {
+  async uploadVehicleDoc(doc: any, res: Response, id?: string) {
     try {
       await this._vehicleModel.findOneAndUpdate(
         { _id: id },
@@ -476,7 +470,7 @@ export class AdminService {
     }
   }
 
-  async getAllVehicles(@Res() res: Response, page: number) {
+  async getAllVehicles(res: Response, page: number) {
     try {
       const perPage = 3;
       const currPage = Number(page) || 1;
@@ -492,7 +486,7 @@ export class AdminService {
     }
   }
 
-  async pagination(@Res() res: Response) {
+  async pagination(res: Response) {
     try {
       const perPage = 3;
       const count = await this._vehicleModel.countDocuments();
@@ -503,7 +497,7 @@ export class AdminService {
     }
   }
 
-  async verifyHostVehicle(@Res() res: Response, vid: string, hid: string) {
+  async verifyHostVehicle(res: Response, vid: string, hid: string) {
     try {
       await this._vehicleModel.findByIdAndUpdate(
         { _id: vid },
@@ -550,7 +544,7 @@ export class AdminService {
     });
   }
 
-  async rejectHostVehicle(@Res() res: Response, id: string, issue: string) {
+  async rejectHostVehicle(res: Response, id: string, issue: string) {
     try {
       const hostData = await this._hostModel.findOne({ _id: id });
       await this.vehicleRejectedMail(hostData.email, hostData.name, issue);
@@ -579,7 +573,7 @@ export class AdminService {
                   <p>Your new vehicle request has been reviewed by our team, but we encountered an issue that requires your attention.</p>
                   <p>Issue: <b>${issue}</b> </p>
                   <p>You can resubmit your vehicle request by addressing the issue. Please click the button below to resubmit your request:</p>
-                  <p><a href="http://localhost:4200" style="text-decoration: none; padding: 10px 20px; background-color: #1976D2; color: #fff;">Resubmit Request</a></p>
+                  <p><a href="https://s3.wheelsondemand.online" style="text-decoration: none; padding: 10px 20px; background-color: #1976D2; color: #fff;">Resubmit Request</a></p>
                   <p style='margin-top:3px'>If you have any questions or need further assistance, please feel free to contact our support team.</p>
                   <p>Best regards,<br>Your WheelsOnDemand Team</p>
               </td>
@@ -597,7 +591,7 @@ export class AdminService {
   async editVehicle(
     files: any,
     editVehicle: UpdateVehicleDto,
-    @Res() res: Response,
+    res: Response,
     id: string,
   ) {
     try {
@@ -618,7 +612,7 @@ export class AdminService {
     }
   }
 
-  async deleteImage(@Res() res: Response, id: string, file: string) {
+  async deleteImage(res: Response, id: string, file: string) {
     try {
       const vehicleData = await this._vehicleModel.findOne({ _id: id });
       if (vehicleData.images.length > 1) {
@@ -644,7 +638,7 @@ export class AdminService {
     }
   }
 
-  async deleteVehicle(@Res() res: Response, id: string) {
+  async deleteVehicle(res: Response, id: string) {
     try {
       await this._vehicleModel.findOneAndDelete({ _id: id });
       res.status(200).json({ message: 'Success' });
@@ -653,7 +647,7 @@ export class AdminService {
     }
   }
 
-  async getAllBookings(@Res() res: Response) {
+  async getAllBookings(res: Response) {
     try {
       const bookings = await this._bookingModel
         .find({})
@@ -671,7 +665,7 @@ export class AdminService {
     }
   }
 
-  async logout(@Req() req: Request, @Res() res: Response) {
+  async logout(req: Request, res: Response) {
     try {
       res.cookie('jwtAdmin', '', { maxAge: 0 });
       res.status(200).json({ message: 'Logged out succesfully' });

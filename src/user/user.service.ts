@@ -1,5 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
-import { HttpStatus, Injectable, Req, Res } from '@nestjs/common';
+import { HttpStatus, Injectable, Req } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
@@ -38,10 +38,7 @@ export class UserService {
     private _mailer: MailerService,
   ) {}
 
-  async signup(
-    signupdto: Signupdto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async signup(signupdto: Signupdto, res: Response) {
     try {
       const { name, email, phone, password, confirmPass } = signupdto;
 
@@ -79,11 +76,7 @@ export class UserService {
     }
   }
 
-  async verifyOtp(
-    @Res({ passthrough: true }) res: Response,
-    @Req() req: Request,
-    otp: any,
-  ) {
+  async verifyOtp(res: Response, @Req() req: Request, otp: any) {
     try {
       const otpb = otp.otp;
       if (this.otpgenetated == otpb) {
@@ -119,7 +112,7 @@ export class UserService {
     });
   }
 
-  async login(logindto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(logindto: LoginDto, res: Response) {
     try {
       const { email, password } = logindto;
       const user = await this._userModel.findOne({ email: email });
@@ -149,7 +142,7 @@ export class UserService {
     }
   }
 
-  async googleReg(user: any, @Res() res: Response) {
+  async googleReg(user: any, res: Response) {
     try {
       const email = user.email;
       const userData = await this._userModel.findOne({ email });
@@ -172,7 +165,7 @@ export class UserService {
     }
   }
 
-  async getUser(@Req() req: Request, @Res() res: Response) {
+  async getUser(@Req() req: Request, res: Response) {
     try {
       const userId = req.body.userId;
 
@@ -187,7 +180,7 @@ export class UserService {
   }
 
   async storeChoices(
-    @Res() res: Response,
+    res: Response,
     req: Request,
     choisedto: ChoiseDto,
     nearBy: string[],
@@ -220,7 +213,7 @@ export class UserService {
   }
 
   async getVehicles(
-    @Res() res: Response,
+    res: Response,
     @Req() req: Request,
     filter?: any,
     page?: number,
@@ -303,7 +296,7 @@ export class UserService {
     }
   }
 
-  async booking(createbookingdto: CreateBookingDto, @Res() res: Response) {
+  async booking(createbookingdto: CreateBookingDto, res: Response) {
     try {
       let bookingDetails;
       const {
@@ -367,7 +360,7 @@ export class UserService {
     }
   }
 
-  async getBooking(@Res() res: Response, bookingid: string) {
+  async getBooking(res: Response, bookingid: string) {
     try {
       const bookingDetails = await this._bookingModel
         .find({ _id: bookingid })
@@ -379,7 +372,7 @@ export class UserService {
     }
   }
 
-  async userbookings(@Res() res: Response, @Req() req: Request) {
+  async userbookings(res: Response, @Req() req: Request) {
     try {
       const userId = req.body.userId;
       const booking = await this._bookingModel
@@ -392,11 +385,7 @@ export class UserService {
     }
   }
 
-  async updateUserProfile(
-    @Res() res: Response,
-    @Req() req: Request,
-    file: any,
-  ) {
+  async updateUserProfile(res: Response, @Req() req: Request, file: any) {
     try {
       const userId = req.body.userId;
       await this._userModel.findOneAndUpdate(
@@ -410,7 +399,7 @@ export class UserService {
   }
 
   async updateUser(
-    @Res() res: Response,
+    res: Response,
     @Req() req: Request,
     updateuserdto: UpdateUserDto,
   ) {
@@ -427,7 +416,7 @@ export class UserService {
     }
   }
 
-  async changePass(@Res() res: Response, @Req() req: Request, data: any) {
+  async changePass(res: Response, @Req() req: Request, data: any) {
     try {
       const userid = req.body.userId;
       const { oldpass, newpass, confirmpass } = data;
@@ -459,7 +448,7 @@ export class UserService {
   }
 
   async cancelBooking(
-    @Res() res: Response,
+    res: Response,
     @Req() req: Request,
     reason: string,
     refund: number,
@@ -501,7 +490,7 @@ export class UserService {
   }
 
   async postReview(
-    @Res() res: Response,
+    res: Response,
     @Req() req: Request,
     vid: string,
     rating: number,
@@ -522,7 +511,7 @@ export class UserService {
     }
   }
 
-  async deleteReview(@Res() res: Response, vid: string, rid: string) {
+  async deleteReview(res: Response, vid: string, rid: string) {
     try {
       await this._vehicleModel.findOneAndUpdate(
         { _id: vid },
@@ -534,7 +523,7 @@ export class UserService {
     }
   }
 
-  async forgotpassword(@Res() res: Response, email: string) {
+  async forgotpassword(res: Response, email: string) {
     try {
       const existEmail = await this._userModel.findOne({ email: email });
       if (!existEmail)
@@ -549,7 +538,7 @@ export class UserService {
     }
   }
 
-  async sendForgotPassMail(@Res() res: Response, email: string, id: string) {
+  async sendForgotPassMail(res: Response, email: string, id: string) {
     try {
       return this._mailer.sendMail({
         to: email,
@@ -560,7 +549,7 @@ export class UserService {
               <h2 style="color: #333333;">Forgot Your Password?</h2>
               <p style="color: #666666;">No worries! It happens to the best of us. Click the link below to reset your password:</p>
               <p>
-                  <a href="http://localhost:4200/reset-password/${id}" style="display: inline-block; padding: 10px 20px; font-size: 16px; text-decoration: none; background-color: #007BFF; color: #ffffff; border-radius: 5px;">Reset Password</a>
+                  <a href="https://s3.wheelsondemand/reset-password/${id}" style="display: inline-block; padding: 10px 20px; font-size: 16px; text-decoration: none; background-color: #007BFF; color: #ffffff; border-radius: 5px;">Reset Password</a>
               </p>
               <p>If you didn't request a password reset, please ignore this email.</p>
               <p>Thanks,<br>Your WheelsOnDemand Team</p>
@@ -573,7 +562,7 @@ export class UserService {
   }
 
   async resetPass(
-    @Res() res: Response,
+    res: Response,
     userId: string,
     newpassword: string,
     confirmpassword: string,
@@ -595,7 +584,7 @@ export class UserService {
     }
   }
 
-  async isBooked(@Res() res: Response, @Req() req: Request, vid: string) {
+  async isBooked(res: Response, @Req() req: Request, vid: string) {
     try {
       const userid = req.body.userId;
       const booking = await this._bookingModel.findOne({
@@ -610,7 +599,7 @@ export class UserService {
     }
   }
 
-  async logout(@Req() req: Request, @Res() res: Response) {
+  async logout(@Req() req: Request, res: Response) {
     try {
       res.cookie('jwt', '', { maxAge: 0 });
       res.status(200).json({ message: 'Logged out succesfully' });

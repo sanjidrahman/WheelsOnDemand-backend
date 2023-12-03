@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Host } from './schemas/host.schemas';
 import { InjectModel } from '@nestjs/mongoose';
-import { HttpStatus, Injectable, Req, Res } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateHostDto } from './dto/create-host.dto';
 import { UpdateHostDto } from './dto/update-host.dto';
 import { Request, Response } from 'express';
@@ -11,7 +10,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as otpgenerater from 'otp-generator';
 import { LoginHostDto } from './dto/login-host.dto';
 import { JwtService } from '@nestjs/jwt';
-import { stringify } from 'circular-json';
+// import { stringify } from 'circular-json';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { Vehicles } from 'src/admin/schemas/vehicles.schema';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
@@ -33,7 +32,7 @@ export class HostService {
     private _jwtservice: JwtService,
   ) {}
 
-  async create(createHostDto: CreateHostDto, @Res() res: Response) {
+  async create(createHostDto: CreateHostDto, res: Response) {
     try {
       const { name, email, password, phone, confirmPass } = createHostDto;
       const existmail = await this._hostModel.findOne({ email: email });
@@ -72,7 +71,7 @@ export class HostService {
     }
   }
 
-  async otpverify(otp: any, @Res() res: Response) {
+  async otpverify(otp: any, res: Response) {
     try {
       const otpg = otp.otp;
       if (this.otpgenerated == otpg) {
@@ -128,7 +127,7 @@ export class HostService {
     });
   }
 
-  async login(hostlogindto: LoginHostDto, @Res() res: Response) {
+  async login(hostlogindto: LoginHostDto, res: Response) {
     try {
       const { email, password } = hostlogindto;
       const hostData = await this._hostModel.findOne({ email: email });
@@ -170,7 +169,7 @@ export class HostService {
     }
   }
 
-  async forgotpassword(@Res() res: Response, email: string) {
+  async forgotpassword(res: Response, email: string) {
     try {
       const existEmail = await this._hostModel.findOne({ email: email });
       if (!existEmail)
@@ -185,7 +184,7 @@ export class HostService {
     }
   }
 
-  async sendForgotPassMail(@Res() res: Response, email: string, id: string) {
+  async sendForgotPassMail(res: Response, email: string, id: string) {
     try {
       return this._mailServive.sendMail({
         to: email,
@@ -196,7 +195,7 @@ export class HostService {
               <h2 style="color: #333333;">Forgot Your Password?</h2>
               <p style="color: #666666;">No worries! It happens to the best of us. Click the link below to reset your password:</p>
               <p>
-                  <a href="http://localhost:4200/host/reset-password/${id}" style="display: inline-block; padding: 10px 20px; font-size: 16px; text-decoration: none; background-color: #007BFF; color: #ffffff; border-radius: 5px;">Reset Password</a>
+                  <a href="https://s3.wheelsondemand.online/host/reset-password/${id}" style="display: inline-block; padding: 10px 20px; font-size: 16px; text-decoration: none; background-color: #007BFF; color: #ffffff; border-radius: 5px;">Reset Password</a>
               </p>
               <p>If you didn't request a password reset, please ignore this email.</p>
               <p>Thanks,<br>Your WheelsOnDemand Team</p>
@@ -209,7 +208,7 @@ export class HostService {
   }
 
   async resetPass(
-    @Res() res: Response,
+    res: Response,
     hostId: string,
     newpassword: string,
     confirmpassword: string,
@@ -231,7 +230,7 @@ export class HostService {
     }
   }
 
-  async dashboard(@Res() res: Response, @Req() req: Request) {
+  async dashboard(res: Response, req: Request) {
     try {
       const hostId = req.body.userId;
       const hostRevenue = await this._bookingModel.aggregate([
@@ -415,7 +414,7 @@ export class HostService {
     }
   }
 
-  async getAllHost(@Res() res: Response) {
+  async getAllHost(res: Response) {
     try {
       const hosts = await this._hostModel.find({});
       return { hosts };
@@ -426,7 +425,7 @@ export class HostService {
     }
   }
 
-  async uplaodDoc(file: any, @Res() res: Response, id: any) {
+  async uplaodDoc(file: any, res: Response, id: any) {
     try {
       const response = {
         originalname: file.originalname,
@@ -444,7 +443,7 @@ export class HostService {
     }
   }
 
-  async uplaodProfile(file: any, @Res() res: Response, @Req() req: Request) {
+  async uplaodProfile(file: any, res: Response, req: Request) {
     try {
       const response = {
         originalname: file.originalname,
@@ -463,7 +462,7 @@ export class HostService {
     }
   }
 
-  async hostdetails(@Req() req: Request, @Res() res: Response) {
+  async hostdetails(req: Request, res: Response) {
     try {
       const hostId = req.body.userId;
       const host = await this._hostModel.findById({ _id: hostId });
@@ -475,11 +474,7 @@ export class HostService {
     }
   }
 
-  async updatehost(
-    updatehostdto: UpdateHostDto,
-    @Res() res: Response,
-    @Req() req: Request,
-  ) {
+  async updatehost(updatehostdto: UpdateHostDto, res: Response, req: Request) {
     try {
       const { name, phone } = updatehostdto;
       const hostId = req.body.userId;
@@ -495,7 +490,7 @@ export class HostService {
     }
   }
 
-  async changepass(data: any, @Res() res: Response, @Req() req: Request) {
+  async changepass(data: any, res: Response, req: Request) {
     try {
       const { oldPass, password, confirmPass } = data;
       const hostId = req.body.userId;
@@ -531,8 +526,8 @@ export class HostService {
   async addVehicle(
     files: any,
     createvehicledto: CreateVehicleDto,
-    @Res() res: Response,
-    @Req() req: Request,
+    res: Response,
+    req: Request,
   ) {
     try {
       const {
@@ -569,7 +564,7 @@ export class HostService {
     }
   }
 
-  async uploadVehicleImage(files: any, @Res() res: Response, id?: string) {
+  async uploadVehicleImage(files: any, res: Response, id?: string) {
     try {
       for (const f of files) {
         await this._vehicleModel.findOneAndUpdate(
@@ -585,7 +580,7 @@ export class HostService {
     }
   }
 
-  async uploadVehicleDoc(doc: any, @Res() res: Response, id?: string) {
+  async uploadVehicleDoc(doc: any, res: Response, id?: string) {
     try {
       await this._vehicleModel.findOneAndUpdate(
         { _id: id },
@@ -599,7 +594,7 @@ export class HostService {
     }
   }
 
-  async hostvehicles(@Res() res: Response, @Req() req: Request, page: number) {
+  async hostvehicles(res: Response, req: Request, page: number) {
     try {
       const hostId = req.body.userId;
       const perPage = 3;
@@ -628,7 +623,7 @@ export class HostService {
   async editVehicle(
     files: any,
     editVehicle: UpdateVehicleDto,
-    @Res() res: Response,
+    res: Response,
     id: string,
   ) {
     try {
@@ -650,7 +645,7 @@ export class HostService {
     }
   }
 
-  async deleteImage(@Res() res: Response, id: string, file: string) {
+  async deleteImage(res: Response, id: string, file: string) {
     try {
       const vehicleData = await this._vehicleModel.findOne({ _id: id });
       if (vehicleData.images.length > 1) {
@@ -678,7 +673,7 @@ export class HostService {
     }
   }
 
-  async getVehicleDetails(@Res() res: Response, v_id: string) {
+  async getVehicleDetails(res: Response, v_id: string) {
     try {
       const vehicleDetails = await this._vehicleModel
         .findOne({ _id: v_id })
@@ -698,7 +693,7 @@ export class HostService {
     }
   }
 
-  async deleteVehicle(@Res() res: Response, id: string) {
+  async deleteVehicle(res: Response, id: string) {
     try {
       await this._vehicleModel.findOneAndDelete({ _id: id });
       res.status(200).json({ message: 'Success' });
@@ -709,7 +704,7 @@ export class HostService {
     }
   }
 
-  async hostBooking(@Res() res: Response, @Req() req: Request) {
+  async hostBooking(res: Response, req: Request) {
     try {
       const hostid = req.body.userId;
       const vehicles: any = await this._bookingModel.aggregate([
@@ -743,7 +738,7 @@ export class HostService {
     }
   }
 
-  async editBookingStatus(@Res() res: Response, b_id: string, status: string) {
+  async editBookingStatus(res: Response, b_id: string, status: string) {
     try {
       await this._bookingModel.findOneAndUpdate(
         { _id: b_id },
@@ -757,7 +752,7 @@ export class HostService {
     }
   }
 
-  async logout(@Req() req: Request, @Res() res: Response) {
+  async logout(req: Request, res: Response) {
     try {
       res.cookie('jwtHost', '', { maxAge: 0 });
       res.status(200).json({ message: 'Logged out succesfully' });
