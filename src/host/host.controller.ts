@@ -100,7 +100,7 @@ export class HostController {
     return this._hostService.uplaodDoc(file, res, id.id);
   }
 
-  @Post('/upload-profile')
+  @Post('/upload-profile/:id')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -113,9 +113,9 @@ export class HostController {
   async uploaded(
     @UploadedFile() file: Express.Multer.File,
     @Res() res: Response,
-    @Req() req: Request,
+    @Param('id') h_id: string,
   ) {
-    return this._hostService.uplaodProfile(file, res, req);
+    return this._hostService.uplaodProfile(file, res, h_id);
   }
 
   @Get('host-vehicles')
@@ -127,7 +127,7 @@ export class HostController {
     return this._hostService.hostvehicles(res, req, page);
   }
 
-  @Post('add-vehicle')
+  @Post('add-vehicle/:h_id')
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -147,9 +147,9 @@ export class HostController {
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() createvehicledto: CreateVehicleDto,
     @Res() res: Response,
-    @Req() req: Request,
+    @Param('h_id') id: string,
   ) {
-    return this._hostService.addVehicle(files, createvehicledto, res, req);
+    return this._hostService.addVehicle(files, createvehicledto, res, id);
   }
 
   @Patch('edit-vehicle/:id')

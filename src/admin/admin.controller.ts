@@ -95,7 +95,7 @@ export class AdminController {
     return this._adminService.getAllVehicles(res, page);
   }
 
-  @Post('add-vehicle')
+  @Post('add-vehicle/:id')
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -116,9 +116,9 @@ export class AdminController {
     files: { files: Array<Express.Multer.File>; doc: Express.Multer.File },
     @Body() createVehicle: CreateVehicleDto,
     @Res() res: Response,
-    @Req() req: Request,
+    @Param('id') a_id: string,
   ) {
-    return this._adminService.addVehicle(files, createVehicle, res, req);
+    return this._adminService.addVehicle(files, createVehicle, res, a_id);
   }
 
   @Patch('verify-host-vehicle')

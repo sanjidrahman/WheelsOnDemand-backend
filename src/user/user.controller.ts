@@ -97,7 +97,7 @@ export class AuthController {
     return this.userservice.userbookings(res, req);
   }
 
-  @Patch('update-profile')
+  @Patch('update-profile/:u_id')
   @UseInterceptors(
     FileInterceptor('profile', {
       storage: diskStorage({
@@ -110,9 +110,9 @@ export class AuthController {
   updateProfile(
     @Res() res: Response,
     @UploadedFile() file: Express.Multer.File,
-    @Req() req: Request,
+    @Param('u_id') u_id: string,
   ) {
-    return this.userservice.updateUserProfile(res, req, file);
+    return this.userservice.updateUserProfile(res, file, u_id);
   }
 
   @Patch('update-user')
@@ -141,7 +141,7 @@ export class AuthController {
     return this.userservice.cancelBooking(
       res,
       req,
-      reason.reason,
+      reason,
       refund,
       refundvia,
       bookId,

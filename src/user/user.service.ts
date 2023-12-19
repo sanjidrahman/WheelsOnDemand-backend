@@ -72,6 +72,7 @@ export class UserService {
       if (error.code === 11000) {
         return res.status(400).json({ message: 'Email is registered!' });
       }
+      console.log(error.message);
       res.status(500).json({ message: 'Internal Error' });
     }
   }
@@ -186,6 +187,7 @@ export class UserService {
     nearBy: string[],
   ) {
     try {
+      console.log('IN GET STORE CHOICE');
       if (req.body.userId) {
         const userId = req.body.userId;
         const { startDate, endDate, pickup, dropoff } = choisedto;
@@ -219,6 +221,7 @@ export class UserService {
     page?: number,
   ) {
     try {
+      console.log('IN GET VEHICLES');
       const perPage = 3;
       const currPage = Number(page) || 1;
       const skip = perPage * (currPage - 1);
@@ -285,12 +288,7 @@ export class UserService {
           $limit: perPage,
         },
       ]);
-      const count = await this._vehicleModel
-        .find({ isVerified: true })
-        .countDocuments();
-      const totalPage = Math.ceil(count / perPage);
-      // console.log(vehicles, totalPage);
-      res.status(200).send({ vehicles, totalPage });
+      return res.status(200).send({ vehicles });
     } catch (err) {
       return res.status(500).json({ message: 'Internal Error' });
     }
@@ -325,7 +323,7 @@ export class UserService {
       }
       await this._userModel.findOneAndUpdate(
         { _id: userId },
-        { $unset: { choices: 1 } },
+        { $unset: { choices: 1, nearby: 1 } },
       );
       if (razorId) {
         bookingDetails = await this._bookingModel.create({
@@ -366,7 +364,7 @@ export class UserService {
         .find({ _id: bookingid })
         .populate('userId')
         .populate('vehicleId');
-      return res.status(200).json(bookingDetails);
+      return res.status(200).json(bookingDetails[0]);
     } catch (err) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
@@ -385,11 +383,10 @@ export class UserService {
     }
   }
 
-  async updateUserProfile(res: Response, @Req() req: Request, file: any) {
+  async updateUserProfile(res: Response, file: any, u_id: string) {
     try {
-      const userId = req.body.userId;
       await this._userModel.findOneAndUpdate(
-        { _id: userId },
+        { _id: u_id },
         { $set: { profile: file.filename } },
       );
       res.status(200).json({ message: 'Success' });

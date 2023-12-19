@@ -420,12 +420,11 @@ export class AdminService {
     files: any,
     createVehicle: CreateVehicleDto,
     res: Response,
-    req: Request,
+    a_id: string,
   ) {
     try {
       const { name, brand, make, transmission, fuel, price, location } =
         createVehicle;
-      const admId = req.body.userId;
       const newVehicle = await this._vehicleModel.create({
         name,
         transmission,
@@ -434,7 +433,7 @@ export class AdminService {
         brand,
         price,
         location,
-        createdBy: admId,
+        createdBy: a_id,
       });
       await this.uploadVehicleImage(files.files, res, newVehicle._id);
       await this.uploadVehicleDoc(files.doc[0], res, newVehicle._id);

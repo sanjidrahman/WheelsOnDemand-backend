@@ -195,7 +195,7 @@ export class HostService {
               <h2 style="color: #333333;">Forgot Your Password?</h2>
               <p style="color: #666666;">No worries! It happens to the best of us. Click the link below to reset your password:</p>
               <p>
-                  <a href="https://s3.wheelsondemand.online/host/reset-password/${id}" style="display: inline-block; padding: 10px 20px; font-size: 16px; text-decoration: none; background-color: #007BFF; color: #ffffff; border-radius: 5px;">Reset Password</a>
+                  <a href="http://localhost:4200/host/reset-password/${id}" style="display: inline-block; padding: 10px 20px; font-size: 16px; text-decoration: none; background-color: #007BFF; color: #ffffff; border-radius: 5px;">Reset Password</a>
               </p>
               <p>If you didn't request a password reset, please ignore this email.</p>
               <p>Thanks,<br>Your WheelsOnDemand Team</p>
@@ -206,6 +206,8 @@ export class HostService {
       return res.status(500).json({ message: err.message });
     }
   }
+
+  // https://s3.wheelsondemand.online/host/reset-password/${id}
 
   async resetPass(
     res: Response,
@@ -443,15 +445,14 @@ export class HostService {
     }
   }
 
-  async uplaodProfile(file: any, res: Response, req: Request) {
+  async uplaodProfile(file: any, res: Response, h_id: string) {
     try {
       const response = {
         originalname: file.originalname,
         filename: file.filename,
       };
-      const hostId = req.body.userId;
       const userup = await this._hostModel.updateOne(
-        { _id: hostId },
+        { _id: h_id },
         { $set: { profile: response.filename } },
       );
       return res.status(200).json({ userup, message: 'Success' });
@@ -527,7 +528,7 @@ export class HostService {
     files: any,
     createvehicledto: CreateVehicleDto,
     res: Response,
-    req: Request,
+    id: string,
   ) {
     try {
       const {
@@ -540,7 +541,6 @@ export class HostService {
         isVerified,
         location,
       } = createvehicledto;
-      const hostId = req.body.userId;
       const newCar = await this._vehicleModel.create({
         name,
         brand,
@@ -549,7 +549,7 @@ export class HostService {
         make,
         price,
         location,
-        createdBy: hostId,
+        createdBy: id,
         isVerified,
       });
       if (newCar) {
@@ -558,6 +558,7 @@ export class HostService {
       }
       return res.status(200).json({ message: 'Success' });
     } catch (err) {
+      console.log(err.message);
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({ message: 'Internal Server Error' });
@@ -600,7 +601,7 @@ export class HostService {
       const perPage = 3;
       const currPage = Number(page) || 1;
       const skip = perPage * (currPage - 1);
-      const vehicle = await this._vehicleModel
+      const vehicles = await this._vehicleModel
         .find({
           createdBy: hostId,
         })
@@ -612,7 +613,7 @@ export class HostService {
         })
         .countDocuments();
       const totalPage = Math.ceil(count / perPage);
-      res.json({ vehicle, totalPage });
+      res.json({ vehicles, totalPage });
     } catch (err) {
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
