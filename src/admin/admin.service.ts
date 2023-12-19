@@ -594,7 +594,6 @@ export class AdminService {
     id: string,
   ) {
     try {
-      // console.log(files, editVehicle);
       const { name, brand, make, transmission, fuel, price, location } =
         editVehicle;
       await this._vehicleModel.findOneAndUpdate(
@@ -607,6 +606,7 @@ export class AdminService {
       }
       res.status(200).json({ message: 'Success' });
     } catch (err) {
+      // console.log(err.message);
       res.status(500).json({ message: 'Internal Error' });
     }
   }
